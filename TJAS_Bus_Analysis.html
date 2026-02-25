@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TJAS Bus Operation Analysis</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f4f8; color: #1a1a2e; }
+  .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); color: white; padding: 28px 40px; border-bottom: 4px solid #e94560; }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 4px; }
+  .header p { opacity: 0.75; font-size: 13px; margin-bottom: 12px; }
+  .nav-links { display: flex; gap: 10px; }
+  .nav-link { background: rgba(255,255,255,0.15); color: white; padding: 7px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.25); }
+  .nav-link.active { background: #e94560; border-color: #e94560; }
+  .container { max-width: 1400px; margin: 0 auto; padding: 24px; }
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
+  .kpi { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid #e94560; }
+  .kpi.green { border-left-color: #10b981; } .kpi.blue { border-left-color: #3b82f6; }
+  .kpi.orange { border-left-color: #f59e0b; } .kpi.purple { border-left-color: #8b5cf6; }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #6b7280; font-weight: 600; margin-bottom: 6px; }
+  .kpi-value { font-size: 26px; font-weight: 800; color: #1a1a2e; line-height: 1; }
+  .kpi-sub { font-size: 12px; color: #6b7280; margin-top: 4px; }
+  .section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid #e5e7eb; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .card { background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .chart-container { position: relative; height: 260px; }
+  .chart-tall { position: relative; height: 320px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: #f8fafc; color: #374151; font-weight: 700; padding: 9px 10px; text-align: left; border-bottom: 2px solid #e5e7eb; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td { padding: 8px 10px; border-bottom: 1px solid #f3f4f6; color: #374151; }
+  tr:hover td { background: #f8fafc; }
+  .badge-profit { background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .badge-loss { background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .util-box { padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 11px; }
+  .util-am { background: #dbeafe; color: #1d4ed8; }
+  .util-pm { background: #ede9fe; color: #6d28d9; }
+  .util-avg { background: #f0fdf4; color: #166534; }
+  .util-low { background: #fee2e2; color: #dc2626; }
+  .util-med { background: #fef3c7; color: #d97706; }
+  .tag { display: inline-block; padding: 2px 7px; border-radius: 10px; font-size: 10px; font-weight: 700; }
+  .tag-d { background: #dbeafe; color: #1d4ed8; }
+  .tag-m { background: #ede9fe; color: #6d28d9; }
+  .insight-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-bottom: 10px; font-size: 12px; color: #374151; line-height: 1.5; }
+  .insight-box.warning { background: #fff7ed; border-left-color: #f59e0b; }
+  .insight-box.success { background: #f0fdf4; border-left-color: #10b981; }
+  .insight-box.danger { background: #fef2f2; border-left-color: #ef4444; }
+  .insight-box strong { display: block; font-weight: 700; margin-bottom: 3px; }
+  .tab-container { margin-bottom: 20px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 2px solid #e5e7eb; }
+  .tab { padding: 10px 18px; font-size: 12px; font-weight: 600; color: #6b7280; cursor: pointer; border-radius: 8px 8px 0 0; border: 1px solid transparent; border-bottom: none; }
+  .tab.active { color: #1d4ed8; background: white; border-color: #e5e7eb; margin-bottom: -2px; border-bottom: 2px solid white; }
+  .tab-content { display: none; background: white; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px; padding: 20px; }
+  .tab-content.active { display: block; }
+  .formula-box { background: linear-gradient(135deg, #1e293b, #0f172a); color: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; }
+  .formula-box h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+  .formula-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+  .formula-card { background: rgba(255,255,255,0.08); border-radius: 8px; padding: 16px; border: 1px solid rgba(255,255,255,0.12); }
+  .formula-card h3 { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+  .formula-code { font-family: monospace; font-size: 13px; color: #67e8f9; background: rgba(0,0,0,0.3); padding: 8px 10px; border-radius: 6px; margin-bottom: 8px; line-height: 1.7; white-space: pre; }
+  .formula-note { font-size: 11px; color: #94a3b8; line-height: 1.5; }
+  .formula-example { font-size: 12px; color: #86efac; margin-top: 8px; font-weight: 600; }
+  .legend-strip { display: flex; gap: 16px; margin-top: 16px; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #cbd5e1; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+  .vs-old { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px 16px; margin-top: 14px; }
+  .vs-old h3 { font-size: 12px; color: #fbbf24; font-weight: 700; margin-bottom: 8px; }
+  .vs-row { display: flex; gap: 24px; font-size: 12px; color: #94a3b8; }
+  .vs-row span { color: #e2e8f0; }
+  .old-val { text-decoration: line-through; color: #ef4444; }
+  .new-val { color: #86efac; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🚌 TJAS Bus Operation Analysis</h1>
+  <p>International Japanese School Bangkok — Route Optimization & Cost Analysis · Term 3/2025-2026</p>
+  <div class="nav-links">
+    <a class="nav-link active" href="TJAS_Bus_Analysis.html">📊 Main Dashboard</a>
+    <a class="nav-link" href="TJAS_Cost_Optimization.html">💡 Cost Optimization Plan</a>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-label">Total Buses</div><div class="kpi-value">160</div><div class="kpi-sub">D-type: 39 · M-type: 121</div></div>
+    <div class="kpi green"><div class="kpi-label">Total Students</div><div class="kpi-value">1,845</div><div class="kpi-sub">G-1 to G-9 · TWO WAYS: 99.9%</div></div>
+    <div class="kpi blue"><div class="kpi-label">Total Revenue</div><div class="kpi-value">฿695K</div><div class="kpi-sub">Term 3/2025-2026</div></div>
+    <div class="kpi orange"><div class="kpi-label">Total P&L</div><div class="kpi-value">฿90.4K</div><div class="kpi-sub">Overall profit margin 13%</div></div>
+    <div class="kpi purple"><div class="kpi-label">Loss-Making Buses</div><div class="kpi-value">84</div><div class="kpi-sub">Out of 160 buses (52.5%)</div></div>
+  </div>
+
+  <!-- Utilization Formula Explainer -->
+  <div class="formula-box">
+    <h2>📐 Utilization Calculation Method — Per-Trip (Corrected)</h2>
+    <div class="formula-grid">
+      <div class="formula-card">
+        <h3>Morning Utilization (AM)</h3>
+        <div class="formula-code">AM Util = Riders_07:30 ÷ Seat Count</div>
+        <div class="formula-note">Every bus has a fixed 07:30 morning run. Riders are counted from the 07:30 column in the Feasibility sheet.</div>
+        <div class="formula-example">D146 example: 28 ÷ 30 = 93%</div>
+      </div>
+      <div class="formula-card">
+        <h3>Afternoon Utilization (PM)</h3>
+        <div class="formula-code">PM Util = Riders_PM ÷ Seat Count
+PM slot = 12:15, 14:00, or 15:00
+(varies by grade / route)</div>
+        <div class="formula-note">G-6 and G-9 end earlier (14:00 or 12:15). Most buses use 15:00. Only one PM slot per bus is active.</div>
+        <div class="formula-example">D146 example: 22 ÷ 30 = 73%</div>
+      </div>
+      <div class="formula-card">
+        <h3>Average Utilization</h3>
+        <div class="formula-code">2-trip bus: Avg = (AM + PM) ÷ 2
+1-trip bus:  Avg = AM (or PM only)
+3-trip bus:  Avg = Total ÷ (Seats × 3)</div>
+        <div class="formula-note">21 buses run 1 trip only. The old method divided by 2 for these, understating their true utilization.</div>
+        <div class="formula-example">D146 example: (93% + 73%) ÷ 2 = 83%</div>
+      </div>
+    </div>
+    <div class="vs-old">
+      <h3>⚠️ Difference from Previous Calculation</h3>
+      <div class="vs-row">
+        <div>Old formula: <span class="old-val">Total Riders ÷ (Seats × 2)</span> — always divided by 2, even for 1-trip buses</div>
+        <div>New formula: <span class="new-val">Per-trip riders ÷ Seats, averaged across actual trips run</span></div>
+      </div>
+      <div class="vs-row" style="margin-top:6px">
+        <div>Example — D259 (1-trip AM only, 22 riders, 23 seats): Old = <span class="old-val">48%</span> → New = <span class="new-val">96%</span></div>
+        <div>Example — D251 (1-trip AM only, 15 riders, 23 seats): Old = <span class="old-val">33%</span> → New = <span class="new-val">65%</span></div>
+      </div>
+    </div>
+    <div class="legend-strip">
+      <div class="legend-item"><div class="legend-dot" style="background:#3b82f6"></div>AM (07:30) utilization</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#8b5cf6"></div>PM (12:15 / 14:00 / 15:00) utilization</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#10b981"></div>Average utilization across actual trips</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div>D-bus fleet avg: AM 70.8% / PM 67.3% / Avg 72.2%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e94560"></div>M-bus fleet avg: AM 71.7% / PM 60.3% / Avg 68.4%</div>
+    </div>
+  </div>
+
+  <!-- AM vs PM Charts -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">D-Buses: AM vs PM Utilization per Bus</div>
+      <div class="chart-tall"><canvas id="dUtilChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">M-Buses (with COGS data): AM vs PM Utilization</div>
+      <div class="chart-tall"><canvas id="mUtilChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Summary + Scatter -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">Fleet Average Utilization — AM vs PM vs Overall</div>
+      <div class="chart-container"><canvas id="fleetUtilChart"></canvas></div>
+      <div style="margin-top:14px">
+        <div class="insight-box">
+          <strong>Morning trips run fuller than afternoons across all bus types</strong>
+          D-bus AM 70.8% vs PM 67.3% (gap: 3.5pp). M-bus AM 71.7% vs PM 60.3% (gap: 11.4pp). The larger M-bus PM gap suggests more students use alternative transport home.
+        </div>
+        <div class="insight-box warning">
+          <strong>21 buses run only 1 trip — their utilization was understated before</strong>
+          D259, D171, D251, and 18 M-buses only operate one direction. The corrected method shows their true per-trip fill rate rather than halving it artificially.
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="section-title">Average Utilization vs P&L (Buses with COGS Data)</div>
+      <div class="chart-tall"><canvas id="utilPLChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Performer Tables -->
+  <div class="tab-container">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('top')">🏆 Top 10 Performers</div>
+      <div class="tab" onclick="showTab('bottom')">🔴 Extreme Loss Routes</div>
+      <div class="tab" onclick="showTab('imbalanced')">⚖️ AM/PM Imbalanced Routes</div>
+    </div>
+
+    <div class="tab-content active" id="top">
+      <table>
+        <tr><th>Bus</th><th>Type</th><th>Seats</th><th>AM Riders</th><th>PM Riders</th><th>AM Util</th><th>PM Util</th><th>Avg Util</th><th>Distance</th><th>P&L</th></tr>
+        <tr><td><b>D146</b></td><td><span class="tag tag-d">D-30</span></td><td>30</td><td>28</td><td>22</td><td><span class="util-box util-am">93%</span></td><td><span class="util-box util-pm">73%</span></td><td><span class="util-box util-avg">83%</span></td><td>33km</td><td><span class="badge-profit">+฿6,002</span></td></tr>
+        <tr><td><b>D161</b></td><td><span class="tag tag-d">D-27</span></td><td>27</td><td>24</td><td>26</td><td><span class="util-box util-am">89%</span></td><td><span class="util-box util-pm">96%</span></td><td><span class="util-box util-avg">93%</span></td><td>40km</td><td><span class="badge-profit">+฿5,963</span></td></tr>
+        <tr><td><b>D133</b></td><td><span class="tag tag-d">D-30</span></td><td>30</td><td>24</td><td>22</td><td><span class="util-box util-am">80%</span></td><td><span class="util-box util-pm">73%</span></td><td><span class="util-box util-avg">77%</span></td><td>49km</td><td><span class="badge-profit">+฿5,094</span></td></tr>
+        <tr><td><b>D158</b></td><td><span class="tag tag-d">D-27</span></td><td>27</td><td>21</td><td>23</td><td><span class="util-box util-am">78%</span></td><td><span class="util-box util-pm">85%</span></td><td><span class="util-box util-avg">81%</span></td><td>39km</td><td><span class="badge-profit">+฿4,635</span></td></tr>
+        <tr><td><b>D131</b></td><td><span class="tag tag-d">D-30</span></td><td>30</td><td>18</td><td>24</td><td><span class="util-box util-am">60%</span></td><td><span class="util-box util-pm">80%</span></td><td><span class="util-box util-avg">70%</span></td><td>36km</td><td><span class="badge-profit">+฿4,564</span></td></tr>
+        <tr><td><b>D154</b></td><td><span class="tag tag-d">D-27</span></td><td>27</td><td>26</td><td>16</td><td><span class="util-box util-am">96%</span></td><td><span class="util-box util-pm">59%</span></td><td><span class="util-box util-avg">78%</span></td><td>35km</td><td><span class="badge-profit">+฿4,515</span></td></tr>
+        <tr><td><b>D157</b></td><td><span class="tag tag-d">D-27</span></td><td>27</td><td>19</td><td>21</td><td><span class="util-box util-am">70%</span></td><td><span class="util-box util-pm">78%</span></td><td><span class="util-box util-avg">74%</span></td><td>19km</td><td><span class="badge-profit">+฿4,365 🏅</span></td></tr>
+        <tr><td><b>D162</b></td><td><span class="tag tag-d">D-27</span></td><td>27</td><td>25</td><td>16</td><td><span class="util-box util-am">93%</span></td><td><span class="util-box util-pm">59%</span></td><td><span class="util-box util-avg">76%</span></td><td>35km</td><td><span class="badge-profit">+฿4,297</span></td></tr>
+        <tr><td><b>D255</b></td><td><span class="tag tag-d">D-23</span></td><td>23</td><td>20</td><td>22</td><td><span class="util-box util-am">87%</span></td><td><span class="util-box util-pm">96%</span></td><td><span class="util-box util-avg">91%</span></td><td>40km</td><td><span class="badge-profit">+฿4,185</span></td></tr>
+        <tr><td><b>M926</b></td><td><span class="tag tag-m">M-14</span></td><td>14</td><td>12</td><td>12</td><td><span class="util-box util-am">86%</span></td><td><span class="util-box util-pm">86%</span></td><td><span class="util-box util-avg">86%</span></td><td>52km</td><td><span class="badge-profit">+฿3,445 🏅 Best M</span></td></tr>
+      </table>
+    </div>
+
+    <div class="tab-content" id="bottom">
+      <table>
+        <tr><th>Bus</th><th>Seats</th><th>AM Riders</th><th>PM Riders</th><th>AM Util</th><th>PM Util</th><th>Avg Util</th><th>Distance</th><th>P&L</th><th>Root Cause</th></tr>
+        <tr><td><b>M096</b></td><td>10</td><td>8</td><td>0</td><td><span class="util-box util-am">80%</span></td><td><span class="util-box util-low">0%</span></td><td><span class="util-box util-avg">80%</span></td><td>475km</td><td><span class="badge-loss">–฿3,236</span></td><td>1-trip only at 475km — fuel alone kills it</td></tr>
+        <tr><td><b>M540</b></td><td>13</td><td>2</td><td>2</td><td><span class="util-box util-low">15%</span></td><td><span class="util-box util-low">15%</span></td><td><span class="util-box util-low">15%</span></td><td>43km</td><td><span class="badge-loss">–฿2,078</span></td><td>Only 4 students, critically low load</td></tr>
+        <tr><td><b>M576</b></td><td>10</td><td>3</td><td>3</td><td><span class="util-box util-low">30%</span></td><td><span class="util-box util-low">30%</span></td><td><span class="util-box util-low">30%</span></td><td>99km</td><td><span class="badge-loss">–฿1,975</span></td><td>6 students, long route</td></tr>
+        <tr><td><b>M065</b></td><td>13</td><td>0</td><td>10</td><td><span class="util-box util-low">0%</span></td><td><span class="util-box util-pm">77%</span></td><td><span class="util-box util-low">0%</span></td><td>156km</td><td><span class="badge-loss">–฿1,698</span></td><td>PM-only, 156km — revenue can't cover fuel</td></tr>
+        <tr><td><b>M989</b></td><td>10</td><td>9</td><td>0</td><td><span class="util-box util-am">90%</span></td><td><span class="util-box util-low">0%</span></td><td><span class="util-box util-avg">90%</span></td><td>132km</td><td><span class="badge-loss">–฿1,542</span></td><td>AM-only, 132km, small bus — high util but distance kills profit</td></tr>
+        <tr><td><b>M051</b></td><td>13</td><td>0</td><td>10</td><td><span class="util-box util-low">0%</span></td><td><span class="util-box util-pm">77%</span></td><td><span class="util-box util-low">0%</span></td><td>94km</td><td><span class="badge-loss">–฿1,374</span></td><td>PM-only, 94km</td></tr>
+        <tr><td><b>M832</b></td><td>14</td><td>8</td><td>0</td><td><span class="util-box util-med">57%</span></td><td><span class="util-box util-low">0%</span></td><td><span class="util-box util-med">57%</span></td><td>25km</td><td><span class="badge-loss">–฿1,179</span></td><td>AM-only, only 8 riders</td></tr>
+        <tr><td><b>M994</b></td><td>10</td><td>8</td><td>3</td><td><span class="util-box util-am">80%</span></td><td><span class="util-box util-low">30%</span></td><td><span class="util-box util-med">55%</span></td><td>113km</td><td><span class="badge-loss">–฿1,090</span></td><td>Low PM load, long distance</td></tr>
+      </table>
+      <div style="margin-top:12px" class="insight-box danger">
+        <strong>Key insight: High utilization does NOT guarantee profitability for long-distance routes</strong>
+        M096 runs at 80% AM utilization but loses ฿3,236. M989 runs at 90% AM utilization but loses ฿1,542. Distance-driven cost is the real killer — not occupancy. This is why distance must be considered alongside utilization in any route decision.
+      </div>
+    </div>
+
+    <div class="tab-content" id="imbalanced">
+      <div style="font-size:12px;color:#6b7280;margin-bottom:12px">Buses where AM and PM utilization differ by more than 30 percentage points. These may be candidates for converting to 1-trip operation or rider redistribution.</div>
+      <table>
+        <tr><th>Bus</th><th>Seats</th><th>AM Riders</th><th>PM Riders</th><th>AM Util</th><th>PM Util</th><th>Gap</th><th>P&L</th><th>Recommendation</th></tr>
+        <tr><td>D155</td><td>27</td><td>6</td><td>22</td><td><span class="util-box util-low">22%</span></td><td><span class="util-box util-am">81%</span></td><td style="color:#dc2626;font-weight:700">59pp</td><td><span class="badge-loss">–฿683</span></td><td>Almost no AM riders — investigate, consider PM-only</td></tr>
+        <tr><td>D168</td><td>27</td><td>12</td><td>26</td><td><span class="util-box util-med">44%</span></td><td><span class="util-box util-am">96%</span></td><td style="color:#f59e0b;font-weight:700">52pp</td><td><span class="badge-profit">+฿3,762</span></td><td>Profitable but 15 empty AM seats — recruit morning riders</td></tr>
+        <tr><td>D165</td><td>27</td><td>10</td><td>23</td><td><span class="util-box util-low">37%</span></td><td><span class="util-box util-am">85%</span></td><td style="color:#f59e0b;font-weight:700">48pp</td><td><span class="badge-profit">+฿2,736</span></td><td>17 empty AM seats — consolidation opportunity</td></tr>
+        <tr><td>D154</td><td>27</td><td>26</td><td>16</td><td><span class="util-box util-am">96%</span></td><td><span class="util-box util-pm">59%</span></td><td style="color:#f59e0b;font-weight:700">37pp</td><td><span class="badge-profit">+฿4,515</span></td><td>Profitable. 10 PM empty seats — offer to waitlisted PM students</td></tr>
+        <tr><td>D162</td><td>27</td><td>25</td><td>16</td><td><span class="util-box util-am">93%</span></td><td><span class="util-box util-pm">59%</span></td><td style="color:#f59e0b;font-weight:700">34pp</td><td><span class="badge-profit">+฿4,297</span></td><td>9 PM empty seats — offer to waitlisted students</td></tr>
+        <tr><td>M545</td><td>13</td><td>11</td><td>3</td><td><span class="util-box util-am">85%</span></td><td><span class="util-box util-low">23%</span></td><td style="color:#f59e0b;font-weight:700">62pp</td><td><span class="badge-loss">–฿151</span></td><td>PM almost empty — convert to AM-only, merge PM students</td></tr>
+        <tr><td>M818</td><td>14</td><td>12</td><td>4</td><td><span class="util-box util-am">86%</span></td><td><span class="util-box util-low">29%</span></td><td style="color:#f59e0b;font-weight:700">57pp</td><td><span class="badge-profit">+฿81</span></td><td>Barely profitable — PM trip nearly empty, review cost</td></tr>
+        <tr><td>M937</td><td>14</td><td>12</td><td>7</td><td><span class="util-box util-am">86%</span></td><td><span class="util-box util-pm">50%</span></td><td style="color:#f59e0b;font-weight:700">36pp</td><td><span class="badge-profit">+฿755</span></td><td>Half-empty PM — fill with 3 more PM students to strengthen margin</td></tr>
+      </table>
+      <div style="margin-top:12px" class="insight-box">
+        <strong>💡 Converting heavily-imbalanced buses to 1-trip can cut operating cost ~40-50%</strong>
+        For buses like D155 (22% AM / 81% PM) and M545 (85% AM / 23% PM), eliminating the near-empty trip direction removes driver overtime, reduces fuel by ~50%, and cuts tire/maintenance wear — while keeping service for the high-utilization direction.
+      </div>
+    </div>
+  </div>
+
+  <!-- Grade + Fleet Charts -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">Student Distribution by Grade</div>
+      <div class="chart-container"><canvas id="gradeChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="section-title">Fleet P&L Performance Overview</div>
+      <div class="chart-container"><canvas id="fleetPLChart"></canvas></div>
+      <div style="margin-top:12px">
+        <div class="insight-box success"><strong>D-buses: 34/39 profitable (87%), avg util 72.2%</strong>Balanced AM/PM loads with short-to-medium distances.</div>
+        <div class="insight-box warning"><strong>M-buses: 41/121 profitable (34%), avg util 68.4%</strong>PM utilization 11pp lower than AM — students using alternative PM transport is a major factor.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const dBuses = ["D131","D132","D133","D146","D153","D154","D155","D157","D158","D161","D162","D165","D166","D167","D168","D169","D172","D242","D244","D245","D247","D254","D255","D257","D258","D260","D261","D262","D263","D264","D265","D266","D267","D268","D269","D270"];
+const dAM =  [60,66.7,80,93.3,74.1,96.3,22.2,70.4,77.8,88.9,92.6,37.0,88.9,70.4,44.4,51.9,77.8,78.3,52.2,82.6,56.5,65.2,87.0,47.8,87.0,52.2,82.6,47.8,34.8,95.7,78.3,95.7,95.7,39.1,56.5,87.0];
+const dPM =  [80,53.3,73.3,73.3,63.0,59.3,81.5,77.8,85.2,96.3,59.3,85.2,51.9,59.3,96.3,74.1,51.9,65.2,69.6,78.3,87.0,69.6,95.7,69.6,39.1,95.7,91.3,95.7,65.2,78.3,69.6,47.8,43.5,69.6,95.7,78.3];
+
+new Chart(document.getElementById('dUtilChart'), {
+  type: 'bar',
+  data: { labels: dBuses, datasets: [
+    { label: 'AM 07:30', data: dAM, backgroundColor: '#3b82f6bb', borderColor: '#3b82f6', borderWidth: 1 },
+    { label: 'PM (14:00/15:00)', data: dPM, backgroundColor: '#8b5cf6bb', borderColor: '#8b5cf6', borderWidth: 1 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+    scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { max: 110, ticks: { callback: v => v+'%', font: { size: 10 } } } }
+  }
+});
+
+const mBuses = ["M041","M042","M542","M580","M602","M603","M604","M607","M609","M612","M811","M819","M823","M824","M830","M862","M888","M893","M894","M895","M896","M898","M918","M922","M926","M927","M928","M932","M936","M944"];
+const mAM =  [76.9,84.6,84.6,76.9,69.2,85.7,78.6,85.7,78.6,78.6,85.7,71.4,78.6,85.7,53.8,71.4,85.7,85.7,85.7,85.7,78.6,85.7,78.6,71.4,85.7,71.4,85.7,84.6,71.4,84.6];
+const mPM =  [69.2,69.2,76.9,84.6,84.6,78.6,78.6,85.7,64.3,64.3,78.6,57.1,85.7,64.3,84.6,57.1,78.6,64.3,71.4,78.6,78.6,64.3,50.0,78.6,85.7,78.6,85.7,61.5,85.7,69.2];
+
+new Chart(document.getElementById('mUtilChart'), {
+  type: 'bar',
+  data: { labels: mBuses, datasets: [
+    { label: 'AM 07:30', data: mAM, backgroundColor: '#3b82f6bb', borderColor: '#3b82f6', borderWidth: 1 },
+    { label: 'PM', data: mPM, backgroundColor: '#8b5cf6bb', borderColor: '#8b5cf6', borderWidth: 1 }
+  ]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'top', labels: { font: { size: 10 } } } },
+    scales: { x: { ticks: { font: { size: 9 }, maxRotation: 45 } }, y: { max: 110, ticks: { callback: v => v+'%', font: { size: 10 } } } }
+  }
+});
+
+new Chart(document.getElementById('fleetUtilChart'), {
+  type: 'bar',
+  data: {
+    labels: ['D-Bus\nAM', 'D-Bus\nPM', 'D-Bus\nAvg', 'M-Bus\nAM', 'M-Bus\nPM', 'M-Bus\nAvg'],
+    datasets: [{ data: [70.8, 67.3, 72.2, 71.7, 60.3, 68.4],
+      backgroundColor: ['#3b82f6cc','#8b5cf6cc','#10b981cc','#3b82f6cc','#8b5cf6cc','#10b981cc'],
+      borderColor: ['#3b82f6','#8b5cf6','#10b981','#3b82f6','#8b5cf6','#10b981'],
+      borderWidth: 2, borderRadius: 6 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { min: 50, max: 85, ticks: { callback: v => v+'%' } } }
+  }
+});
+
+const scatter_data = [
+  {x:70,y:4564,t:'D131'},{x:60,y:2502,t:'D132'},{x:77,y:5094,t:'D133'},{x:83,y:6002,t:'D146'},
+  {x:69,y:3546,t:'D153'},{x:78,y:4515,t:'D154'},{x:52,y:-683,t:'D155'},{x:74,y:4365,t:'D157'},
+  {x:81,y:4635,t:'D158'},{x:93,y:5963,t:'D161'},{x:76,y:4297,t:'D162'},{x:61,y:2736,t:'D165'},
+  {x:55,y:2178,t:'D254'},{x:91,y:4185,t:'D255'},{x:87,y:3811,t:'D261'},{x:87,y:3888,t:'D264'},
+  {x:83,y:3485,t:'D270'},{x:86,y:3445,t:'M926'},{x:82,y:3361,t:'M566'},{x:82,y:2981,t:'M823'},
+  {x:86,y:2253,t:'M928'},{x:79,y:2247,t:'M936'},{x:73,y:1926,t:'M932'},{x:75,y:1873,t:'M922'},
+  {x:69,y:1742,t:'M830'},{x:64,y:1681,t:'M862'},{x:82,y:1501,t:'M811'},{x:82,y:1431,t:'M888'},
+  {x:75,y:1113,t:'M898'},{x:75,y:1060,t:'M893'},{x:0,y:-1374,t:'M051'},{x:15,y:-2078,t:'M540'},
+  {x:30,y:-1975,t:'M576'},{x:55,y:-1090,t:'M994'},{x:80,y:-3236,t:'M096'},
+];
+new Chart(document.getElementById('utilPLChart'), {
+  type: 'scatter',
+  data: { datasets: [{ data: scatter_data.map(d => ({x:d.x, y:d.y})),
+    backgroundColor: scatter_data.map(d => d.y > 0 ? '#10b981aa' : '#ef4444aa'),
+    borderColor: scatter_data.map(d => d.y > 0 ? '#10b981' : '#ef4444'), pointRadius: 6
+  }]},
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => {
+      const d = scatter_data[ctx.dataIndex]; return `${d.t}: ${d.x}% util | ฿${d.y.toLocaleString()}`;
+    }}}},
+    scales: {
+      x: { title: { display: true, text: 'Average Utilization (%)' }, min: 0, max: 100 },
+      y: { title: { display: true, text: 'P&L (฿)' }, ticks: { callback: v => '฿'+(v/1000).toFixed(1)+'K' } }
+    }
+  }
+});
+
+new Chart(document.getElementById('gradeChart'), {
+  type: 'bar',
+  data: { labels: ['G-1','G-2','G-3','G-4','G-5','G-6','G-7','G-8','G-9'],
+    datasets: [{ label: 'Students', data: [258,244,263,253,250,198,166,123,89],
+      backgroundColor: ['#3b82f6','#6366f1','#8b5cf6','#a78bfa','#60a5fa','#34d399','#fbbf24','#f87171','#fb923c'],
+      borderRadius: 5 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+    scales: { y: { title: { display: true, text: 'Students' } } }
+  }
+});
+
+new Chart(document.getElementById('fleetPLChart'), {
+  type: 'doughnut',
+  data: { labels: ['D-Bus Profit (+฿105K)', 'M-Bus Profitable (+฿60K)', 'M-Bus Loss (–฿75K)'],
+    datasets: [{ data: [105298, 60000, 75000],
+      backgroundColor: ['#10b981bb','#3b82f6bb','#ef4444bb'],
+      borderColor: ['#10b981','#3b82f6','#ef4444'], borderWidth: 2 }]
+  },
+  options: { responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom', labels: { font: { size: 11 } } } }
+  }
+});
+
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>
