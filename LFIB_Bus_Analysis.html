@@ -102,6 +102,7 @@ tr:hover td{background:var(--red-pale);}
       <a href="LFIB_Cost_Optimization.html">🇫🇷 LFIB Optimize</a>
       <a href="index.html">⚖ School Compare</a>
       <a href="LFIB_Comparison.html">📊 Detail Compare</a>
+      <a href="LFIB_Route_Map.html">🗺 Route Map</a>
     </nav>
   </div>
 </div>
@@ -112,11 +113,115 @@ tr:hover td{background:var(--red-pale);}
     <div class="kpi k-navy"><div class="kpi-lbl">Total Buses</div><div class="kpi-val">53</div><div class="kpi-sub">All M-type · 10–14 seats</div></div>
     <div class="kpi k-blue"><div class="kpi-lbl">Students Served</div><div class="kpi-val">685</div><div class="kpi-sub">356 AM · 329 PM total</div></div>
     <div class="kpi k-green"><div class="kpi-lbl">Total Revenue</div><div class="kpi-val">฿208K</div><div class="kpi-sub">฿304 per rider</div></div>
-    <div class="kpi k-red"><div class="kpi-lbl">Total P&L</div><div class="kpi-val loss">–฿23,770</div><div class="kpi-sub">Margin: –11.4%</div></div>
+    <div class="kpi k-red"><div class="kpi-lbl">Total P&amp;L</div><div class="kpi-val loss">–฿23,770</div><div class="kpi-sub">Margin: –11.4%</div></div>
     <div class="kpi k-amber"><div class="kpi-lbl">Profitable Buses</div><div class="kpi-val">19 / 53</div><div class="kpi-sub">35.8% — 64% lose money</div></div>
   </div>
 
+  <!-- D vs M Type Breakdown -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+
+    <!-- No D-bus panel -->
+    <div style="background:#f0f4ff;border:1.5px dashed #93c5fd;border-radius:10px;padding:18px 20px;display:flex;align-items:center;gap:18px;">
+      <div style="font-size:40px;opacity:0.35;">🚌</div>
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#1e40af;font-family:'DM Mono',monospace;margin-bottom:6px;">D-Type Buses (Large) · 23–30 seats</div>
+        <div style="font-size:24px;font-weight:800;color:#1e40af;margin-bottom:4px;">0 buses</div>
+        <div style="font-size:12px;color:#3b82f6;line-height:1.5;">LFIB operates <b>no D-type buses</b>. TJAS earns avg <b>+฿2,700/bus</b> from D-types. Introducing D-buses on high-density LFIB routes could generate +฿4,000–฿6,000 per bus per term.</div>
+      </div>
+    </div>
+
+    <!-- M-Type Panel -->
+    <div style="background:#fef2f2;border:1.5px solid var(--red-mid);border-radius:10px;padding:18px 20px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <div style="width:10px;height:10px;background:var(--red);border-radius:50%;"></div>
+        <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#922b21;font-family:'DM Mono',monospace;">M-Type Buses (Small) · 10–14 seats · All 53 buses</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#922b21;margin-bottom:3px;font-family:'DM Mono',monospace;">Total P&amp;L</div><div style="font-size:20px;font-weight:800;color:var(--red);">–฿23.8K</div><div style="font-size:10px;color:var(--muted);">Avg –฿449/bus</div></div>
+        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#922b21;margin-bottom:3px;font-family:'DM Mono',monospace;">Avg Util</div><div style="font-size:20px;font-weight:800;color:var(--navy);">38%</div><div style="font-size:10px;color:var(--muted);">AM 58.6% · PM decays</div></div>
+        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#922b21;margin-bottom:3px;font-family:'DM Mono',monospace;">Profitable</div><div style="font-size:20px;font-weight:800;color:var(--red);">36%</div><div style="font-size:10px;color:var(--muted);">19 of 53 buses</div></div>
+        <div><div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#922b21;margin-bottom:3px;font-family:'DM Mono',monospace;">Avg Distance</div><div style="font-size:20px;font-weight:800;color:var(--navy);">89 km</div><div style="font-size:10px;color:var(--muted);">vs TJAS M 69 km</div></div>
+      </div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding-top:12px;border-top:1px solid var(--red-mid);">
+        <div><div style="font-size:9px;color:#922b21;font-weight:700;font-family:'DM Mono',monospace;">TOTAL RIDERS</div><div style="font-size:15px;font-weight:700;">685</div></div>
+        <div><div style="font-size:9px;color:#922b21;font-weight:700;font-family:'DM Mono',monospace;">AVG RIDERS/BUS</div><div style="font-size:15px;font-weight:700;">12.9</div></div>
+        <div><div style="font-size:9px;color:#922b21;font-weight:700;font-family:'DM Mono',monospace;">PM SLOTS</div><div style="font-size:15px;font-weight:700;">5 slots</div></div>
+      </div>
+    </div>
+
+  </div>
+
   <!-- UTILIZATION METHODOLOGY EXPLAINER -->
+
+  <!-- COGS Breakdown + Pricing + Distance -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+
+    <!-- COGS Breakdown -->
+    <div style="background:var(--white);border-radius:8px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);font-family:'DM Mono',monospace;">COGS Breakdown — M-Type per Bus Average (฿3,668)</div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px;"><span>Driver</span><span style="font-weight:700;">฿1,915 <span style="color:var(--muted);font-weight:400;">(52%)</span></span></div>
+        <div style="background:#f4eded;border-radius:3px;height:8px;"><div style="width:52%;height:8px;background:var(--red);border-radius:3px;"></div></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px;"><span>Monitor</span><span style="font-weight:700;">฿1,091 <span style="color:var(--muted);font-weight:400;">(30%)</span></span></div>
+        <div style="background:#f4eded;border-radius:3px;height:8px;"><div style="width:30%;height:8px;background:#e67e22;border-radius:3px;"></div></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px;"><span>Fuel</span><span style="font-weight:700;">฿373 <span style="color:var(--muted);font-weight:400;">(10%)</span></span></div>
+        <div style="background:#f4eded;border-radius:3px;height:8px;"><div style="width:10%;height:8px;background:#f39c12;border-radius:3px;"></div></div>
+      </div>
+      <div style="margin-bottom:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px;"><span>Toll</span><span style="font-weight:700;">฿104 <span style="color:var(--muted);font-weight:400;">(3%)</span></span></div>
+        <div style="background:#f4eded;border-radius:3px;height:8px;"><div style="width:3%;height:8px;background:#bdc3c7;border-radius:3px;"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;margin-bottom:3px;"><span>Maintenance + Other</span><span style="font-weight:700;">฿185 <span style="color:var(--muted);font-weight:400;">(5%)</span></span></div>
+        <div style="background:#f4eded;border-radius:3px;height:8px;"><div style="width:5%;height:8px;background:#d5dbdb;border-radius:3px;"></div></div>
+      </div>
+      <div style="margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:var(--red-pale);border-radius:5px;padding:9px 12px;font-size:11px;color:var(--red);">
+          <strong>Labor = 82%</strong><br>Driver + Monitor = ฿3,006/bus fixed cost regardless of riders
+        </div>
+        <div style="background:#fef9e7;border-radius:5px;padding:9px 12px;font-size:11px;color:#78350f;">
+          <strong>vs TJAS M: ฿2,319</strong><br>LFIB pays <b>+58% more</b> per bus — longer routes drive higher driver pay
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing + Distance -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <!-- Pricing -->
+      <div style="background:var(--white);border-radius:8px;padding:18px 22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:14px;font-family:'DM Mono',monospace;">Revenue per Student — Pricing Paradox</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+          <div style="text-align:center;padding:12px;background:var(--red-pale);border-radius:6px;border:1px solid var(--red-mid);">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:var(--red);font-family:'DM Mono',monospace;margin-bottom:4px;">LFIB M-Type</div>
+            <div style="font-size:28px;font-weight:800;color:var(--red);">฿304</div>
+            <div style="font-size:10px;color:var(--muted);">per student · margin 6.5%</div>
+          </div>
+          <div style="text-align:center;padding:12px;background:#f0fdf4;border-radius:6px;border:1px solid #86efac;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#166534;font-family:'DM Mono',monospace;margin-bottom:4px;">TJAS M-Type</div>
+            <div style="font-size:28px;font-weight:800;color:#166534;">฿187</div>
+            <div style="font-size:10px;color:var(--muted);">per student · margin 68%</div>
+          </div>
+        </div>
+        <div style="font-size:11.5px;color:var(--slate);line-height:1.6;background:#fef9e7;border-left:3px solid #f59e0b;padding:9px 12px;border-radius:0 5px 5px 0;">
+          <strong>LFIB charges 62% more per student yet earns only 6.5% margin</strong> — vs TJAS's 68%. The reason: LFIB's COGS/bus is ฿3,668 (vs ฿2,319) and each bus serves only 12.9 riders vs 19.5. Higher price cannot compensate for fewer riders on longer, costlier routes.
+        </div>
+      </div>
+
+      <!-- Distance band -->
+      <div style="background:var(--white);border-radius:8px;padding:18px 22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:12px;font-family:'DM Mono',monospace;">Route Distance vs Profitability</div>
+        <div style="position:relative;height:160px;"><canvas id="lfibDistChart"></canvas></div>
+        <div style="font-size:11px;color:var(--slate);margin-top:10px;line-height:1.5;">
+          Unusually, <b>120–150km routes are LFIB's most profitable</b> (60% profitable, avg +฿113). Short routes (&lt;90km) are harder — low ridership density fails to offset fixed labor even at shorter distances.
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="formula-banner">
     <h2>Utilization methodology — each time slot calculated independently</h2>
     <div class="slot-grid">
@@ -419,6 +524,29 @@ function showTab(id,el){
   document.getElementById(id).classList.add('active');
   el.classList.add('active');
 }
+
+(function(){
+  const ctx = document.getElementById('lfibDistChart');
+  if(!ctx) return;
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['<30km','30-60km','60-90km','90-120km','120-150km','150+km'],
+      datasets:[
+        {label:'% Profitable',data:[0,33,38,35,60,25],backgroundColor:function(ctx){return ctx.raw>=50?'#27ae60aa':'#e74c3caa'},borderColor:function(ctx){return ctx.raw>=50?'#1e8449':'#c0392b'},borderWidth:1.5,borderRadius:3},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>'Profitable: '+ctx.raw+'%'}}},
+      scales:{
+        x:{ticks:{font:{size:9}}},
+        y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:9}}}
+      }
+    }
+  });
+})();
+
 </script>
 </body>
 </html>

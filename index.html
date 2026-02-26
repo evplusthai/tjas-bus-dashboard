@@ -176,6 +176,7 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <a class="header-tab" href="LFIB_Cost_Optimization.html">🇫🇷 LFIB Optimize</a>
     <a class="header-tab active" href="index.html">⚖ School Compare</a>
     <a class="header-tab" href="LFIB_Comparison.html">📊 Detail Compare</a>
+      <a href="LFIB_Route_Map.html">🗺 Route Map</a>
     </div>
   </div>
 </div>
@@ -230,8 +231,17 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
       <div class="chart-h240"><canvas id="fleetCompChart"></canvas></div>
     </div>
     <div class="card">
-      <div class="card-title">Key Performance Metrics Comparison</div>
-      <div style="margin-top:8px">
+      <div class="card-title">Key Performance Metrics Comparison <span>By bus type</span></div>
+
+      <!-- Tab switcher -->
+      <div style="display:flex;gap:0;margin-bottom:16px;border:1px solid var(--border);border-radius:6px;overflow:hidden;width:fit-content;">
+        <button onclick="kpiTab('overall',this)" id="kpiTabOverall" style="padding:6px 16px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#1d4ed8;color:white;font-family:inherit;">Overall</button>
+        <button onclick="kpiTab('mtype',this)" id="kpiTabM" style="padding:6px 16px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#f9fafb;color:#6b7280;font-family:inherit;">🚐 M-Type</button>
+        <button onclick="kpiTab('dtype',this)" id="kpiTabD" style="padding:6px 16px;font-size:11px;font-weight:600;border:none;cursor:pointer;background:#f9fafb;color:#6b7280;font-family:inherit;">🚌 D-Type</button>
+      </div>
+
+      <!-- OVERALL panel -->
+      <div id="kpiPanelOverall">
         <div class="metric-compare">
           <div class="mc-label">P&L Margin</div>
           <div class="mc-bars">
@@ -240,39 +250,313 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
           </div>
         </div>
         <div class="metric-compare">
-          <div class="mc-label">Average Bus Utilization (per trip)</div>
+          <div class="mc-label">Average Utilization (per trip)</div>
           <div class="mc-bars">
             <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:68%"></div></div><span class="mc-val t">68.4%</span></div>
             <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:38.3%"></div></div><span class="mc-val l">38.3%</span></div>
           </div>
         </div>
         <div class="metric-compare">
-          <div class="mc-label">Morning Trip Utilization</div>
+          <div class="mc-label">AM Utilization</div>
           <div class="mc-bars">
             <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:71.7%"></div></div><span class="mc-val t">71.7%</span></div>
             <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:52%"></div></div><span class="mc-val l">52.0%</span></div>
           </div>
         </div>
         <div class="metric-compare">
-          <div class="mc-label">Profitable Buses (%)</div>
+          <div class="mc-label">Profitable Buses</div>
           <div class="mc-bars">
             <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:47.5%"></div></div><span class="mc-val t">47.5%</span></div>
             <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:35.8%"></div></div><span class="mc-val l">35.8%</span></div>
           </div>
         </div>
         <div class="metric-compare">
-          <div class="mc-label">Avg Students per Bus</div>
+          <div class="mc-label">Avg Riders per Bus</div>
           <div class="mc-bars">
-            <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:73.4%"></div></div><span class="mc-val t">11.5</span></div>
-            <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:54.4%"></div></div><span class="mc-val l">12.9</span></div>
+            <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:53%"></div></div><span class="mc-val t">26.7</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:24%"></div></div><span class="mc-val l">12.9</span></div>
           </div>
         </div>
         <div class="metric-compare">
-          <div class="mc-label">Avg Distance per Bus (km)</div>
+          <div class="mc-label">Avg Distance per Bus</div>
           <div class="mc-bars">
-            <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:55%"></div></div><span class="mc-val t">~68km</span></div>
+            <div class="mc-row"><span class="mc-school t">TJAS</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:55%"></div></div><span class="mc-val t">~60km</span></div>
             <div class="mc-row"><span class="mc-school l">LFIB</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:100%"></div></div><span class="mc-val l">90.3km</span></div>
           </div>
+        </div>
+      </div>
+
+      <!-- M-TYPE panel (hidden by default) -->
+      <div id="kpiPanelM" style="display:none;">
+        <div style="background:#fef9e7;border-left:3px solid #f59e0b;padding:8px 12px;border-radius:0 4px 4px 0;font-size:11px;color:#78350f;margin-bottom:12px;">
+          🚐 Comparing same bus type (10–14 seats) · TJAS 121 buses vs LFIB 53 buses
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg Utilization</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:70.2%"></div></div><span class="mc-val t">70.2%</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:38.3%"></div></div><span class="mc-val l">38.3%</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">AM Utilization</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:71.7%"></div></div><span class="mc-val t">71.7%</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:52%"></div></div><span class="mc-val l" style="color:#dc2626">52.0% ▼</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg P&L per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:30%"></div></div><span class="mc-val t" style="color:#e94560">–฿123</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:5%"></div></div><span class="mc-val l" style="color:#dc2626">–฿449 ▼</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Profitable Buses</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:34%"></div></div><span class="mc-val t">34%</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:36%"></div></div><span class="mc-val l">36% ≈</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg Riders per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:56%"></div></div><span class="mc-val t">19.5</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:37%"></div></div><span class="mc-val l" style="color:#dc2626">12.9 ▼</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">COGS per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:63%"></div></div><span class="mc-val t">฿2,319</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:100%"></div></div><span class="mc-val l" style="color:#dc2626">฿3,668 ▲+58%</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg Distance</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS M</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:77%"></div></div><span class="mc-val t">69.3km</span></div>
+            <div class="mc-row"><span class="mc-school l">LFIB M</span><div class="mc-bar-bg"><div class="mc-bar-fill l" style="width:100%"></div></div><span class="mc-val l" style="color:#dc2626">90.3km ▲</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- D-TYPE panel (hidden by default) -->
+      <div id="kpiPanelD" style="display:none;">
+        <div style="background:#f0fdf4;border-left:3px solid #22c55e;padding:8px 12px;border-radius:0 4px 4px 0;font-size:11px;color:#166534;margin-bottom:12px;">
+          🚌 TJAS only — 39 D-type buses (23–30 seats) · LFIB has zero D-type buses
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg Utilization</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:72.2%"></div></div><span class="mc-val t" style="color:#059669">72.2%</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"><div style="width:0%"></div></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">AM Utilization</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:70.8%"></div></div><span class="mc-val t" style="color:#059669">70.8%</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg P&L per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:100%;background:#10b981"></div></div><span class="mc-val t" style="color:#059669">+฿2,700 ✓</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Profitable Buses</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:87%;background:#10b981"></div></div><span class="mc-val t" style="color:#059669">87% (34/39)</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Avg Riders per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:100%;background:#10b981"></div></div><span class="mc-val t" style="color:#059669">34.8</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div class="metric-compare">
+          <div class="mc-label">Revenue per Bus</div>
+          <div class="mc-bars">
+            <div class="mc-row"><span class="mc-school t">TJAS D</span><div class="mc-bar-bg"><div class="mc-bar-fill t" style="width:100%;background:#10b981"></div></div><span class="mc-val t" style="color:#059669">฿6,530</span></div>
+            <div class="mc-row"><span style="font-size:10px;font-weight:600;color:#9ca3af;width:48px;flex-shrink:0;">LFIB D</span><div class="mc-bar-bg"></div><span style="font-size:11px;font-weight:700;color:#9ca3af;">N/A</span></div>
+          </div>
+        </div>
+        <div style="margin-top:12px;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:10px 12px;font-size:11px;color:#92400e;">
+          💡 If LFIB introduced D-buses on its top 4 density zones, projected P&L impact: <strong>+฿10,000–฿13,000 per term</strong>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- SAME-TYPE COMPARISON: M vs M, then D-type -->
+  <div class="section-divider"><span>Same-Type Comparison — Fair Apples-to-Apples</span></div>
+
+  <!-- M-Type: TJAS vs LFIB -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">🚐 M-Type Buses — TJAS vs LFIB <span>Same bus size (10–14 seats) · Direct comparison</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border-radius:8px;overflow:hidden;border:1px solid var(--border);">
+
+      <!-- TJAS M -->
+      <div style="padding:20px;background:#fffdf7;border-right:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:18px;">🇯🇵</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1a1a2e;">TJAS — M-Type</div>
+            <div style="font-size:11px;color:#6b7280;">121 buses · 10–14 seats · Avg 2.1 trips/bus</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #e5e7eb;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Avg Util</div>
+            <div style="font-size:22px;font-weight:800;color:#1d4ed8;">70.2%</div>
+          </div>
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #e5e7eb;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Avg P&amp;L/Bus</div>
+            <div style="font-size:22px;font-weight:800;color:#e94560;">–฿123</div>
+          </div>
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #e5e7eb;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Profitable</div>
+            <div style="font-size:22px;font-weight:800;color:#f59e0b;">34%</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">AM Utilization</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">71.7%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">PM Utilization</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">58.5%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Avg Riders / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">19.5</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Avg Distance</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">69.3 km</td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Revenue / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">฿3,644</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;color:#6b7280;">COGS / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">฿2,319</td>
+          </tr>
+        </table>
+      </div>
+
+      <!-- LFIB M -->
+      <div style="padding:20px;background:#fff8f8;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:18px;">🇫🇷</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1a1a2e;">LFIB — M-Type</div>
+            <div style="font-size:11px;color:#6b7280;">53 buses · 10–14 seats · Avg 2.6 trips/bus</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;">
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #fecaca;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Avg Util</div>
+            <div style="font-size:22px;font-weight:800;color:#dc2626;">38.3%</div>
+          </div>
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #fecaca;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Avg P&amp;L/Bus</div>
+            <div style="font-size:22px;font-weight:800;color:#dc2626;">–฿449</div>
+          </div>
+          <div style="background:white;border-radius:6px;padding:12px;border:1px solid #fecaca;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:4px;font-family:'DM Mono',monospace;">Profitable</div>
+            <div style="font-size:22px;font-weight:800;color:#f59e0b;">36%</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">AM Utilization</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;color:#dc2626;">52.0% <span style="font-size:10px;color:#dc2626;">▼ –19.7pp</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">PM Utilization</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;color:#dc2626;">~28% <span style="font-size:10px;color:#dc2626;">▼ –30pp</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Avg Riders / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;color:#dc2626;">12.9 <span style="font-size:10px;color:#dc2626;">▼ –6.6</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Avg Distance</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;color:#dc2626;">90.3 km <span style="font-size:10px;color:#dc2626;">▲ +21 km</span></td>
+          </tr>
+          <tr style="border-bottom:1px solid #f3f4f6;">
+            <td style="padding:5px 0;color:#6b7280;">Revenue / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;">฿3,925</td>
+          </tr>
+          <tr>
+            <td style="padding:5px 0;color:#6b7280;">COGS / Bus</td>
+            <td style="padding:5px 0;font-weight:700;text-align:right;color:#dc2626;">฿3,668 <span style="font-size:10px;color:#dc2626;">▲ +58%</span></td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+    <!-- Key insight banner -->
+    <div style="margin-top:14px;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:12px 16px;font-size:12px;color:#92400e;line-height:1.6;">
+      <strong>🔍 Same bus, very different results:</strong> TJAS M-buses run <b>70.2% avg utilization</b> vs LFIB's <b>38.3%</b> — despite nearly identical seat counts (13.5 vs 13.0). The difference comes from route design: TJAS M-buses average <b>2.1 trips and 19.5 riders</b>, while LFIB buses run <b>2.6 trips but only 12.9 riders</b>, spreading thin ridership across more PM slots. LFIB's COGS/bus is also <b>58% higher</b> (฿3,668 vs ฿2,319) due to longer routes (90 km vs 69 km).
+    </div>
+  </div>
+
+  <!-- D-Type: TJAS only -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">🚌 D-Type Buses — TJAS Only <span>LFIB operates zero D-type buses — the structural gap</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+          <span style="font-size:18px;">🇯🇵</span>
+          <div>
+            <div style="font-size:13px;font-weight:700;">TJAS — D-Type (39 buses · 23–30 seats)</div>
+            <div style="font-size:11px;color:#6b7280;">Avg 2 trips/bus · 34/39 profitable (87%)</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">
+          <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;padding:12px;text-align:center;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#92400e;font-family:'DM Mono',monospace;margin-bottom:4px;">Avg Util</div>
+            <div style="font-size:20px;font-weight:800;color:#92400e;">72.2%</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:12px;text-align:center;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#166534;font-family:'DM Mono',monospace;margin-bottom:4px;">Avg P&amp;L/Bus</div>
+            <div style="font-size:20px;font-weight:800;color:#166534;">+฿2,700</div>
+          </div>
+          <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:12px;text-align:center;">
+            <div style="font-size:9px;font-weight:700;text-transform:uppercase;color:#166534;font-family:'DM Mono',monospace;margin-bottom:4px;">Revenue/Bus</div>
+            <div style="font-size:20px;font-weight:800;color:#166534;">฿6,530</div>
+          </div>
+        </div>
+        <table style="width:100%;border-collapse:collapse;font-size:11.5px;">
+          <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 0;color:#6b7280;">AM Util</td><td style="font-weight:700;text-align:right;">70.8%</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 0;color:#6b7280;">PM Util</td><td style="font-weight:700;text-align:right;">67.3%</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 0;color:#6b7280;">Avg Riders / Bus</td><td style="font-weight:700;text-align:right;">34.8</td></tr>
+          <tr style="border-bottom:1px solid #f3f4f6;"><td style="padding:5px 0;color:#6b7280;">Avg Distance</td><td style="font-weight:700;text-align:right;">38.3 km</td></tr>
+          <tr><td style="padding:5px 0;color:#6b7280;">COGS / Bus</td><td style="font-weight:700;text-align:right;">฿2,681</td></tr>
+        </table>
+      </div>
+      <div>
+        <div style="background:#f0f4ff;border:1.5px dashed #93c5fd;border-radius:10px;padding:20px;text-align:center;margin-bottom:14px;">
+          <div style="font-size:36px;margin-bottom:8px;opacity:0.4;">🚌</div>
+          <div style="font-size:13px;font-weight:700;color:#1e40af;margin-bottom:6px;">LFIB — D-Type: 0 buses</div>
+          <div style="font-size:12px;color:#3b82f6;line-height:1.6;">No large buses in operation.<br>All routes use M-type (10–14 seats) only.</div>
+        </div>
+        <div style="background:#fef9e7;border-left:3px solid #f59e0b;padding:12px 14px;border-radius:0 6px 6px 0;font-size:12px;color:#78350f;line-height:1.6;">
+          <strong>Opportunity:</strong> D-buses earn <b>2.2× more revenue per bus</b> (฿6,530 vs ฿3,925) while running shorter routes (38 km vs 90 km). If LFIB introduced D-buses on its 3–4 highest-density zones (20+ students), each D-bus replacing 2 M-buses could save <b>฿4,000–฿6,000 per term</b> while consolidating 2 drivers and 2 monitors into one.
         </div>
       </div>
     </div>
@@ -287,6 +571,60 @@ body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--t
     <div class="card">
       <div class="card-title">Utilization vs P&L Scatter <span>Coloured by school</span></div>
       <div class="chart-h280"><canvas id="utilScatterChart"></canvas></div>
+    </div>
+  </div>
+
+
+  <!-- COGS Breakdown + Pricing Comparison -->
+  <div class="section-divider"><span>Cost Structure &amp; Pricing Analysis</span></div>
+  <div class="grid-2" style="margin-bottom:20px;">
+
+    <!-- COGS stacked comparison -->
+    <div class="card">
+      <div class="card-title">COGS Breakdown — Per Bus Average <span>What drives costs for each type</span></div>
+      <div style="position:relative;height:240px;"><canvas id="cogsStackChart"></canvas></div>
+      <div style="margin-top:12px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;font-size:11px;">
+        <div style="background:#fffbeb;border-radius:5px;padding:8px 10px;">
+          <div style="font-weight:700;color:#92400e;margin-bottom:3px;">TJAS D-bus</div>
+          <div style="color:#374151;">Labor = <b>89%</b> of ฿2,403 COGS</div>
+        </div>
+        <div style="background:#fef2f2;border-radius:5px;padding:8px 10px;">
+          <div style="font-weight:700;color:#991b1b;margin-bottom:3px;">TJAS M-bus</div>
+          <div style="color:#374151;">Driver alone = <b>98%</b> of ฿1,170 COGS</div>
+        </div>
+        <div style="background:#fff0f0;border-radius:5px;padding:8px 10px;">
+          <div style="font-weight:700;color:#7f1d1d;margin-bottom:3px;">LFIB M-bus</div>
+          <div style="color:#374151;">Labor = <b>82%</b> of ฿3,668 COGS (+58%)</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing paradox -->
+    <div class="card">
+      <div class="card-title">Revenue per Student vs Profitability <span>Higher price ≠ higher profit</span></div>
+      <div style="position:relative;height:200px;"><canvas id="pricingChart"></canvas></div>
+      <div style="margin-top:12px;background:#fef9e7;border-left:3px solid #f59e0b;padding:10px 14px;border-radius:0 5px 5px 0;font-size:12px;color:#78350f;line-height:1.6;">
+        <strong>The pricing paradox:</strong> LFIB charges <b>฿304/student</b> — 62% more than TJAS's ฿187 — yet earns only <b>6.5% margin</b> vs TJAS's 68%. Why? LFIB's COGS/bus is 58% higher (฿3,668 vs ฿2,319) and each bus carries only 12.9 riders vs 19.5. No pricing increase alone can solve a cost and ridership problem.
+      </div>
+    </div>
+  </div>
+
+  <!-- Distance Band Analysis -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title">Route Distance vs Profitability — All Bus Types <span>% profitable buses per distance band</span></div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:center;">
+      <div style="position:relative;height:220px;"><canvas id="distAllChart"></canvas></div>
+      <div style="font-size:11.5px;line-height:1.8;color:#374151;">
+        <div style="margin-bottom:10px;padding:8px 12px;background:#fffbeb;border-radius:6px;border-left:3px solid #f59e0b;">
+          <strong style="color:#92400e;">🚌 TJAS D-bus:</strong> Best at <b>30–60km</b> (90% profitable). Stays under 120km.
+        </div>
+        <div style="margin-bottom:10px;padding:8px 12px;background:#fef2f2;border-radius:6px;border-left:3px solid #e94560;">
+          <strong style="color:#991b1b;">🚐 TJAS M-bus:</strong> Best at <b>90–120km</b> (67% profitable). Worst under 30km (0%) — short routes can't justify driver cost.
+        </div>
+        <div style="padding:8px 12px;background:#fff5f5;border-radius:6px;border-left:3px solid #dc2626;">
+          <strong style="color:#7f1d1d;">🚐 LFIB M-bus:</strong> Best at <b>120–150km</b> (60%). No distance band above 40% — structural ridership problem, not just route length.
+        </div>
+      </div>
     </div>
   </div>
 
@@ -624,6 +962,95 @@ function showTab(id, el) {
   document.getElementById(id).classList.add('active');
   el.classList.add('active');
 }
+
+function kpiTab(type, btn) {
+  ['Overall','M','D'].forEach(t => {
+    document.getElementById('kpiPanel'+t).style.display = 'none';
+    document.getElementById('kpiTab'+t).style.background = '#f9fafb';
+    document.getElementById('kpiTab'+t).style.color = '#6b7280';
+  });
+  document.getElementById('kpiPanel'+type.charAt(0).toUpperCase()+type.slice(1)).style.display = 'block';
+  btn.style.background = '#1d4ed8';
+  btn.style.color = 'white';
+}
+
+// COGS stacked bar chart
+(function(){
+  const ctx = document.getElementById('cogsStackChart');
+  if(!ctx) return;
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['TJAS D-Type','TJAS M-Type','LFIB M-Type'],
+      datasets:[
+        {label:'Driver',data:[1431,1148,1915],backgroundColor:'#e94560cc',borderRadius:0},
+        {label:'Monitor',data:[700,700,1091],backgroundColor:'#f59e0bcc',borderRadius:0},
+        {label:'Fuel',data:[396,173,373],backgroundColor:'#3b82f6cc',borderRadius:0},
+        {label:'Other',data:[38+32+58,62+13+22,135+104+150],backgroundColor:'#94a3b8cc',borderRadius:{topLeft:4,topRight:4}}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10}}},
+        tooltip:{mode:'index',intersect:false,callbacks:{label:ctx=>ctx.dataset.label+': ฿'+ctx.raw.toLocaleString()}}
+      },
+      scales:{
+        x:{stacked:true,ticks:{font:{size:11}}},
+        y:{stacked:true,ticks:{callback:v=>'฿'+v.toLocaleString(),font:{size:10}},
+          title:{display:true,text:'COGS per Bus (฿)',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+// Pricing chart
+(function(){
+  const ctx = document.getElementById('pricingChart');
+  if(!ctx) return;
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['TJAS D-Type','TJAS M-Type','LFIB M-Type'],
+      datasets:[
+        {label:'Revenue/Student (฿)',data:[188,187,304],backgroundColor:['#f59e0baa','#3b82f6aa','#e94560aa'],borderColor:['#d97706','#1d4ed8','#dc2626'],borderWidth:2,borderRadius:5,yAxisID:'y'},
+        {label:'Profit Margin (%)',data:[63.2,67.9,6.5],backgroundColor:'transparent',borderColor:['#16a34a','#16a34a','#dc2626'],borderWidth:2.5,type:'line',yAxisID:'y2',pointRadius:5,pointBackgroundColor:['#16a34a','#16a34a','#dc2626']}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+      scales:{
+        x:{ticks:{font:{size:11}}},
+        y:{position:'left',ticks:{callback:v=>'฿'+v,font:{size:10}},title:{display:true,text:'฿ per student',font:{size:10}}},
+        y2:{position:'right',min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}},grid:{drawOnChartArea:false},title:{display:true,text:'Margin %',font:{size:10}}}
+      }
+    }
+  });
+})();
+
+// Distance band all types
+(function(){
+  const ctx = document.getElementById('distAllChart');
+  if(!ctx) return;
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['<30km','30-60km','60-90km','90-120km','120-150km','150+km'],
+      datasets:[
+        {label:'TJAS D-Type',data:[80,90,0,100,0,0],backgroundColor:'#f59e0baa',borderColor:'#d97706',borderWidth:1.5,borderRadius:3},
+        {label:'TJAS M-Type',data:[0,33,35,67,57,25],backgroundColor:'#3b82f6aa',borderColor:'#1d4ed8',borderWidth:1.5,borderRadius:3},
+        {label:'LFIB M-Type',data:[0,33,38,35,60,25],backgroundColor:'#e94560aa',borderColor:'#dc2626',borderWidth:1.5,borderRadius:3}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+      scales:{
+        x:{ticks:{font:{size:9}}},
+        y:{min:0,max:100,ticks:{callback:v=>v+'%',font:{size:10}},
+          title:{display:true,text:'% Profitable',font:{size:10}}}
+      }
+    }
+  });
+})();
+
 </script>
 </body>
 </html>
