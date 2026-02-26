@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LFIB Bus Operation Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --red:#c0392b; --red-lt:#e74c3c; --red-pale:#fdf0ef; --red-mid:#fadbd8;
+  --navy:#1a252f; --slate:#2c3e50; --muted:#7f8c8d; --border:#e8d5d3; --bg:#faf7f7; --white:#fff;
+  --green:#27ae60; --amber:#f39c12; --blue:#2980b9;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--navy);}
+
+.header{background:var(--navy);color:white;padding:0;position:relative;overflow:hidden;}
+.header-inner{padding:28px 40px 22px;position:relative;z-index:2;}
+.header::before{content:'LFIB';position:absolute;right:-20px;top:-30px;font-family:'DM Mono',monospace;font-size:160px;font-weight:700;color:rgba(192,57,43,0.12);letter-spacing:-8px;z-index:1;user-select:none;}
+.header h1{font-size:22px;font-weight:800;letter-spacing:-0.3px;margin-bottom:3px;}
+.header-sub{font-size:12px;color:rgba(255,255,255,0.5);font-family:'DM Mono',monospace;margin-bottom:16px;}
+.nav{display:flex;gap:8px;flex-wrap:wrap;}
+.nav a{font-size:11px;font-weight:700;text-decoration:none;padding:5px 14px;border-radius:3px;border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.7);letter-spacing:0.5px;font-family:'DM Mono',monospace;transition:all .2s;}
+.nav a:hover{background:rgba(255,255,255,0.1);color:white;}
+.nav a.active{background:var(--red);border-color:var(--red);color:white;}
+
+.container{max-width:1440px;margin:0 auto;padding:28px 24px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-bottom:20px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:20px;}
+
+.kpi{background:var(--white);border-radius:8px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,0.07);border-top:3px solid var(--border);}
+.kpi.k-red{border-top-color:var(--red);}.kpi.k-green{border-top-color:var(--green);}.kpi.k-blue{border-top-color:var(--blue);}.kpi.k-amber{border-top-color:var(--amber);}.kpi.k-navy{border-top-color:var(--navy);}
+.kpi-lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-family:'DM Mono',monospace;}
+.kpi-val{font-size:28px;font-weight:800;line-height:1;color:var(--navy);}
+.kpi-val.loss{color:var(--red);}
+.kpi-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+.card{background:var(--white);border-radius:8px;padding:22px;box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+.card-title{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;font-family:'DM Mono',monospace;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+.formula-banner{background:var(--navy);border-radius:8px;padding:24px 28px;margin-bottom:20px;color:white;}
+.formula-banner h2{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.45);margin-bottom:18px;font-family:'DM Mono',monospace;}
+.slot-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px;}
+.slot-box{border-radius:6px;padding:12px 10px;text-align:center;border:1px solid rgba(255,255,255,0.12);}
+.slot-time{font-family:'DM Mono',monospace;font-size:13px;font-weight:700;margin-bottom:4px;}
+.slot-label{font-size:10px;opacity:0.55;margin-bottom:8px;}
+.slot-stat{font-size:20px;font-weight:800;}
+.slot-sub{font-size:10px;opacity:0.5;margin-top:2px;}
+.formula-note{background:rgba(255,255,255,0.05);border-radius:6px;padding:14px 16px;font-size:12px;line-height:1.7;color:rgba(255,255,255,0.75);border-left:3px solid var(--red);}
+.formula-note code{font-family:'DM Mono',monospace;font-size:11px;color:#a8d8ea;background:rgba(0,0,0,0.25);padding:1px 6px;border-radius:3px;}
+
+.ch260{position:relative;height:260px;}
+.ch300{position:relative;height:300px;}
+.ch340{position:relative;height:340px;}
+
+table{width:100%;border-collapse:collapse;font-size:11.5px;}
+th{background:#f4eded;padding:8px 9px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:2px solid var(--border);text-align:left;font-family:'DM Mono',monospace;}
+td{padding:7px 9px;border-bottom:1px solid #f5eeee;vertical-align:middle;}
+tr:hover td{background:var(--red-pale);}
+.tbl-total td{background:#f4eded;font-weight:700;border-top:2px solid var(--border);}
+
+.b{padding:2px 7px;border-radius:3px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;white-space:nowrap;}
+.b-loss{background:#fdedec;color:#922b21;}.b-prof{background:#eafaf1;color:#1e8449;}
+.b-elim{background:#fdedec;color:#922b21;border:1px solid #f5b7b1;}
+.b-merge{background:#fef5e4;color:#9c640c;border:1px solid #fad7a0;}
+
+.tabs{display:flex;gap:2px;margin-bottom:-1px;}
+.tab{padding:9px 18px;font-size:11px;font-weight:700;font-family:'DM Mono',monospace;letter-spacing:0.5px;cursor:pointer;border:1px solid var(--border);border-bottom:none;border-radius:6px 6px 0 0;background:#f4eded;color:var(--muted);}
+.tab.active{background:var(--white);color:var(--red);border-color:var(--border);}
+.tab-panel{display:none;background:var(--white);border:1px solid var(--border);border-radius:0 6px 6px 6px;padding:20px;}
+.tab-panel.active{display:block;}
+
+.note{background:var(--red-pale);border-left:3px solid var(--red);padding:10px 14px;border-radius:0 6px 6px 0;font-size:12px;color:var(--slate);line-height:1.6;margin-bottom:10px;}
+.note.green{background:#eafaf1;border-left-color:var(--green);}
+.note.blue{background:#eaf4fb;border-left-color:var(--blue);}
+.note.amber{background:#fef9e7;border-left-color:var(--amber);}
+.note strong{font-weight:700;display:block;margin-bottom:2px;font-size:12px;}
+
+.slot-pill{display:inline-flex;align-items:center;justify-content:center;height:22px;min-width:40px;border-radius:3px;font-size:10px;font-weight:700;font-family:'DM Mono',monospace;padding:0 6px;}
+.sp-inactive{background:#f0f0f0;color:#ccc;}
+.sp-am{background:#d6eaf8;color:#1a5276;}
+.sp-p14{background:#e8daef;color:#6c3483;}
+.sp-p15{background:#d5f5e3;color:#1a6535;}
+.sp-p16{background:#fdebd0;color:#9a5200;}
+.sp-p17{background:#fdedec;color:#922b21;}
+.sp-p18{background:#f9ebea;color:#7b241c;}
+.sp-low{background:#fdedec;color:#922b21;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <h1>🇫🇷 LFIB — Bus Operation Analysis</h1>
+    <div class="header-sub">Lycée Français International de Bangkok · Semester 2 / 2025-2026 · 53 buses · 685 students</div>
+    <nav class="nav">
+      <a href="TJAS_Bus_Analysis.html">🇯🇵 TJAS Dashboard</a>
+      <a href="TJAS_Cost_Optimization.html">🇯🇵 TJAS Optimize</a>
+      <a href="LFIB_Bus_Analysis.html" class="active">🇫🇷 LFIB Dashboard</a>
+      <a href="LFIB_Cost_Optimization.html">🇫🇷 LFIB Optimize</a>
+      <a href="School_Comparison.html">⚖ Compare</a>
+    </nav>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="g5">
+    <div class="kpi k-navy"><div class="kpi-lbl">Total Buses</div><div class="kpi-val">53</div><div class="kpi-sub">All M-type · 10–14 seats</div></div>
+    <div class="kpi k-blue"><div class="kpi-lbl">Students Served</div><div class="kpi-val">685</div><div class="kpi-sub">356 AM · 329 PM total</div></div>
+    <div class="kpi k-green"><div class="kpi-lbl">Total Revenue</div><div class="kpi-val">฿208K</div><div class="kpi-sub">฿304 per rider</div></div>
+    <div class="kpi k-red"><div class="kpi-lbl">Total P&L</div><div class="kpi-val loss">–฿23,770</div><div class="kpi-sub">Margin: –11.4%</div></div>
+    <div class="kpi k-amber"><div class="kpi-lbl">Profitable Buses</div><div class="kpi-val">19 / 53</div><div class="kpi-sub">35.8% — 64% lose money</div></div>
+  </div>
+
+  <!-- UTILIZATION METHODOLOGY EXPLAINER -->
+  <div class="formula-banner">
+    <h2>Utilization methodology — each time slot calculated independently</h2>
+    <div class="slot-grid">
+      <div class="slot-box" style="background:rgba(36,113,163,0.22);border-color:rgba(36,113,163,0.4)">
+        <div class="slot-time" style="color:#85c1e9">07:40</div>
+        <div class="slot-label">Morning pickup</div>
+        <div class="slot-stat" style="color:#85c1e9">58.6%</div>
+        <div class="slot-sub">47 buses · 356 riders</div>
+      </div>
+      <div class="slot-box" style="background:rgba(142,68,173,0.18);border-color:rgba(142,68,173,0.35)">
+        <div class="slot-time" style="color:#c39bd3">14:10</div>
+        <div class="slot-label">PM slot 1</div>
+        <div class="slot-stat" style="color:#c39bd3">40.5%</div>
+        <div class="slot-sub">27 buses · 138 riders</div>
+      </div>
+      <div class="slot-box" style="background:rgba(26,188,156,0.13);border-color:rgba(26,188,156,0.3)">
+        <div class="slot-time" style="color:#76d7c4">15:10</div>
+        <div class="slot-label">PM slot 2</div>
+        <div class="slot-stat" style="color:#76d7c4">27.3%</div>
+        <div class="slot-sub">19 buses · 69 riders</div>
+      </div>
+      <div class="slot-box" style="background:rgba(230,126,34,0.15);border-color:rgba(230,126,34,0.35)">
+        <div class="slot-time" style="color:#f0b27a">16:10</div>
+        <div class="slot-label">PM slot 3</div>
+        <div class="slot-stat" style="color:#f0b27a">21.5%</div>
+        <div class="slot-sub">22 buses · 60 riders</div>
+      </div>
+      <div class="slot-box" style="background:rgba(231,76,60,0.15);border-color:rgba(231,76,60,0.35)">
+        <div class="slot-time" style="color:#f1948a">17:10</div>
+        <div class="slot-label">PM slot 4</div>
+        <div class="slot-stat" style="color:#f1948a">22.5%</div>
+        <div class="slot-sub">16 buses · 48 riders</div>
+      </div>
+      <div class="slot-box" style="background:rgba(150,40,27,0.22);border-color:rgba(150,40,27,0.45)">
+        <div class="slot-time" style="color:#f1948a">18:10</div>
+        <div class="slot-label">PM slot 5</div>
+        <div class="slot-stat" style="color:#f1948a">13.6%</div>
+        <div class="slot-sub">8 buses · 14 riders</div>
+      </div>
+    </div>
+    <div class="formula-note">
+      <strong style="color:white;font-size:13px;margin-bottom:6px;display:block">Each active time slot = one trip, utilization = riders ÷ seats for that slot only</strong>
+      A bus running 07:40, 14:10, and 16:10 has <b>three separate utilization values</b>:
+      <code>u₀₇₄₀ = riders₀₇₄₀ / seats</code> &nbsp;|&nbsp; <code>u₁₄₁₀ = riders₁₄₁₀ / seats</code> &nbsp;|&nbsp; <code>u₁₆₁₀ = riders₁₆₁₀ / seats</code>.
+      The <b>average utilization</b> is the mean of active slots only — inactive slots (0 riders) are excluded from the average so they don't artificially drag down the score.
+      <br><br>
+      Example — <b>M809</b> (14 seats, 4 active slots): 07:40→9 riders=<b>64%</b>, 14:10→4=<b>29%</b>, 16:10→4=<b>29%</b>, 18:10→3=<b>21%</b> → avg = <b style="color:#f0b27a">36%</b>.
+      This correctly shows that while AM is strong, the three PM slots are thin.
+      <br><br>
+      <span style="color:#f9ebea;font-weight:700">Key finding:</span> AM averages <b style="color:#85c1e9">58.6%</b> fleet-wide. PM slots decay from <b style="color:#c39bd3">40.5%</b> at 14:10 down to just <b style="color:#f1948a">13.6%</b> at 18:10. Operating 5 different PM pickup times fragments ridership and progressively empties late buses.
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 -->
+  <div class="g2">
+    <div class="card">
+      <div class="card-title">Fleet-Wide Avg Utilization by Time Slot</div>
+      <div class="ch300"><canvas id="slotAvgChart"></canvas></div>
+      <div class="note amber" style="margin-top:12px">
+        <strong>AM leads at 58.6%; PM drops steadily — 18:10 hits just 13.6%</strong>
+        The later the slot, the fewer riders and emptier buses. 8 buses run the 18:10 slot for only 14 total riders combined.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Avg Utilization vs P&L — All 53 Buses</div>
+      <div class="ch300"><canvas id="utilPLChart"></canvas></div>
+      <div class="note blue" style="margin-top:12px">
+        <strong>Profitable zone starts around 40% avg utilization</strong>
+        Revenue per rider (฿304) means a bus needs ~12 riders per seat-trip to break even — translating to roughly 40%+ avg util for most routes.
+      </div>
+    </div>
+  </div>
+
+  <!-- PER-BUS SLOT CHART -->
+  <div class="card" style="margin-bottom:20px">
+    <div class="card-title">Per-Bus Utilization by Time Slot — Sorted by Avg Utilization (inactive slots shown as gap)</div>
+    <div class="ch340"><canvas id="perBusChart"></canvas></div>
+  </div>
+
+  <!-- TABS -->
+  <div style="margin-bottom:20px">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('t-top',this)">🏆 Top 10 Performers</button>
+      <button class="tab" onclick="showTab('t-bot',this)">🔴 Worst Routes</button>
+      <button class="tab" onclick="showTab('t-pm',this)">⚠️ PM-Only Buses (6)</button>
+      <button class="tab" onclick="showTab('t-all',this)">📋 All 53 Buses</button>
+    </div>
+
+    <div class="tab-panel active" id="t-top">
+      <table>
+        <tr><th>Bus</th><th>Seats</th><th>07:40</th><th>14:10</th><th>15:10</th><th>16:10</th><th>17:10</th><th>18:10</th><th>Avg Util</th><th>Riders</th><th>km</th><th>P&L</th></tr>
+        <tr><td><b>M831</b></td><td>14</td><td><span class="slot-pill sp-am">79%</span></td><td><span class="slot-pill sp-p14">79%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">21%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>60%</b></td><td>25</td><td>115</td><td><span class="b b-prof">+฿2,447</span></td></tr>
+        <tr><td><b>M173</b></td><td>12</td><td><span class="slot-pill sp-am">83%</span></td><td><span class="slot-pill sp-p14">75%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p17">42%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>67%</b></td><td>24</td><td>167</td><td><span class="b b-prof">+฿1,824</span></td></tr>
+        <tr><td><b>M857</b></td><td>14</td><td><span class="slot-pill sp-am">57%</span></td><td><span class="slot-pill sp-p14">86%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">14%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>52%</b></td><td>22</td><td>94</td><td><span class="b b-prof">+฿1,776</span></td></tr>
+        <tr><td><b>M827</b></td><td>14</td><td><span class="slot-pill sp-am">64%</span></td><td><span class="slot-pill sp-p14">57%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">14%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>45%</b></td><td>19</td><td>44</td><td><span class="b b-prof">+฿1,316</span></td></tr>
+        <tr><td><b>M809</b></td><td>14</td><td><span class="slot-pill sp-am">64%</span></td><td><span class="slot-pill sp-p14">29%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">29%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p18">21%</span></td><td><b>36%</b></td><td>20</td><td>68</td><td><span class="b b-prof">+฿1,229</span></td></tr>
+        <tr><td><b>M858</b></td><td>14</td><td><span class="slot-pill sp-am">50%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p15">57%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p17">36%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>48%</b></td><td>20</td><td>115</td><td><span class="b b-prof">+฿1,137</span></td></tr>
+        <tr><td><b>M535</b></td><td>13</td><td><span class="slot-pill sp-am">85%</span></td><td><span class="slot-pill sp-p14">46%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">15%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>49%</b></td><td>19</td><td>86</td><td><span class="b b-prof">+฿1,075</span></td></tr>
+        <tr><td><b>M557</b></td><td>10</td><td><span class="slot-pill sp-am">80%</span></td><td><span class="slot-pill sp-p14" style="background:#d5f5e3;color:#1a6535;font-weight:900">100%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">20%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>67%</b></td><td>20</td><td>133</td><td><span class="b b-prof">+฿1,051</span></td></tr>
+        <tr><td><b>M844</b></td><td>14</td><td><span class="slot-pill sp-am">64%</span></td><td><span class="slot-pill sp-p14">50%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p17">21%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>45%</b></td><td>19</td><td>112</td><td><span class="b b-prof">+฿934</span></td></tr>
+        <tr><td><b>M847</b></td><td>14</td><td><span class="slot-pill sp-am">64%</span></td><td><span class="slot-pill sp-p14">29%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-p16">36%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><b>43%</b></td><td>18</td><td>74</td><td><span class="b b-prof">+฿800</span></td></tr>
+      </table>
+      <div class="note green" style="margin-top:12px">
+        <strong>Pattern: Strong AM (50–85%) + well-loaded early PM (14:10 or 15:10) drives profitability</strong>
+        Top buses like M173 (83% AM, 75% at 14:10) and M831 (79% AM, 79% at 14:10) show that the 14:10 slot is the most valuable PM slot — it carries the most riders per bus. Late slots (16:10–18:10) on profitable buses are thin but covered by the AM+early PM combination.
+      </div>
+    </div>
+
+    <div class="tab-panel" id="t-bot">
+      <table>
+        <tr><th>Bus</th><th>Seats</th><th>07:40</th><th>14:10</th><th>15:10</th><th>16:10</th><th>17:10</th><th>18:10</th><th>Avg Util</th><th>Riders</th><th>COGS</th><th>P&L</th><th>Root Cause</th></tr>
+        <tr><td><b>M606</b></td><td>14</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">14%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">14%</td><td>2</td><td>฿3,421</td><td><span class="b b-loss">–฿2,961</span></td><td><span class="b b-elim">PM-only · 2 riders</span></td></tr>
+        <tr><td><b>M504</b></td><td>14</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">21%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">21%</td><td>3</td><td>฿3,191</td><td><span class="b b-loss">–฿2,476</span></td><td><span class="b b-elim">PM-only · 3 riders</span></td></tr>
+        <tr><td><b>M174</b></td><td>12</td><td><span class="slot-pill sp-low">25%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">17%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">8%</span></td><td style="color:var(--red);font-weight:800">17%</td><td>6</td><td>฿3,820</td><td><span class="b b-loss">–฿2,454</span></td><td><span class="b b-elim">6 riders · 3 trips · 118km</span></td></tr>
+        <tr><td><b>M981</b></td><td>14</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">29%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">29%</td><td>4</td><td>฿3,311</td><td><span class="b b-loss">–฿2,341</span></td><td><span class="b b-elim">PM-only · 4 riders</span></td></tr>
+        <tr><td><b>M983</b></td><td>14</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">36%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">36%</td><td>5</td><td>฿3,541</td><td><span class="b b-loss">–฿2,316</span></td><td><span class="b b-elim">PM-only · 117km</span></td></tr>
+        <tr><td><b>M812</b></td><td>14</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">29%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">29%</td><td>4</td><td>฿3,204</td><td><span class="b b-loss">–฿2,235</span></td><td><span class="b b-elim">PM-only · 4 riders</span></td></tr>
+        <tr><td><b>M866</b></td><td>13</td><td><span class="slot-pill sp-inactive" style="color:#e74c3c;font-weight:900">0</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">31%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">31%</td><td>4</td><td>฿3,140</td><td><span class="b b-loss">–฿2,170</span></td><td><span class="b b-elim">PM-only · 4 riders</span></td></tr>
+        <tr><td><b>M171</b></td><td>12</td><td><span class="slot-pill sp-p16">42%</span></td><td><span class="slot-pill sp-low">17%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">29%</td><td>7</td><td>฿3,465</td><td><span class="b b-loss">–฿1,844</span></td><td><span class="b b-merge">Only 7 total riders</span></td></tr>
+        <tr><td><b>M996</b></td><td>10</td><td><span class="slot-pill sp-p16">40%</span></td><td><span class="slot-pill sp-p16">30%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">10%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">27%</td><td>8</td><td>฿3,626</td><td><span class="b b-loss">–฿1,637</span></td><td><span class="b b-merge">16:10 slot only 1 rider</span></td></tr>
+        <tr><td><b>M172</b></td><td>12</td><td><span class="slot-pill sp-p16">50%</span></td><td><span class="slot-pill sp-p16">25%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-low">8%</span></td><td><span class="slot-pill sp-inactive">–</span></td><td><span class="slot-pill sp-inactive">–</span></td><td style="color:var(--red);font-weight:800">28%</td><td>10</td><td>฿3,886</td><td><span class="b b-loss">–฿1,500</span></td><td><span class="b b-merge">16:10 slot only 1 rider</span></td></tr>
+      </table>
+    </div>
+
+    <div class="tab-panel" id="t-pm">
+      <p style="font-size:13px;color:var(--slate);margin-bottom:14px">These 6 buses carry <b>zero morning students</b> — the 07:40 slot is empty. They run only 1 PM trip with 2–5 students while paying full driver + monitor + fuel COGS (~฿3,100–฿3,500).</p>
+      <table>
+        <tr><th>Bus</th><th>Seats</th><th>07:40 util</th><th>Active PM Slot</th><th>PM Util</th><th>PM Riders</th><th>km</th><th>COGS</th><th>Revenue</th><th>P&L</th></tr>
+        <tr><td><b>M606</b></td><td>14</td><td><b style="color:var(--red)">0 riders</b></td><td>16:10</td><td><span class="slot-pill sp-low">14%</span></td><td>2</td><td>88</td><td>฿3,421</td><td>฿1,140</td><td><span class="b b-loss">–฿2,961</span></td></tr>
+        <tr><td><b>M504</b></td><td>14</td><td><b style="color:var(--red)">0 riders</b></td><td>16:10</td><td><span class="slot-pill sp-low">21%</span></td><td>3</td><td>54</td><td>฿3,191</td><td>฿1,395</td><td><span class="b b-loss">–฿2,476</span></td></tr>
+        <tr><td><b>M981</b></td><td>14</td><td><b style="color:var(--red)">0 riders</b></td><td>17:10</td><td><span class="slot-pill sp-low">29%</span></td><td>4</td><td>79</td><td>฿3,311</td><td>฿1,650</td><td><span class="b b-loss">–฿2,341</span></td></tr>
+        <tr><td><b>M983</b></td><td>14</td><td><b style="color:var(--red)">0 riders</b></td><td>17:10</td><td><span class="slot-pill sp-low">36%</span></td><td>5</td><td>117</td><td>฿3,541</td><td>฿1,905</td><td><span class="b b-loss">–฿2,316</span></td></tr>
+        <tr><td><b>M812</b></td><td>14</td><td><b style="color:var(--red)">0 riders</b></td><td>15:10</td><td><span class="slot-pill sp-low">29%</span></td><td>4</td><td>51</td><td>฿3,204</td><td>฿1,650</td><td><span class="b b-loss">–฿2,235</span></td></tr>
+        <tr><td><b>M866</b></td><td>13</td><td><b style="color:var(--red)">0 riders</b></td><td>16:10</td><td><span class="slot-pill sp-low">31%</span></td><td>4</td><td>48</td><td>฿3,140</td><td>฿1,650</td><td><span class="b b-loss">–฿2,170</span></td></tr>
+        <tr class="tbl-total"><td colspan="9"><b>Total loss from 6 PM-only buses (61% of entire LFIB term loss)</b></td><td><span class="b b-loss">–฿14,499</span></td></tr>
+      </table>
+      <div class="note" style="margin-top:12px">
+        <strong>Eliminating these 6 buses alone cuts total loss from –฿23,770 to –฿9,271</strong>
+        The 22 affected students need reassigning to other buses' 15:10–17:10 PM slots. Many have spare seats available.
+      </div>
+    </div>
+
+    <div class="tab-panel" id="t-all">
+      <div id="fullTable"></div>
+    </div>
+  </div>
+
+  <!-- Bottom row -->
+  <div class="g3">
+    <div class="card">
+      <div class="card-title">P&L Distribution — 53 Buses</div>
+      <div class="ch260"><canvas id="plDistChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Slot Utilization Decay Trend</div>
+      <div class="ch260"><canvas id="slotTrendChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Fleet Composition & Status</div>
+      <div class="ch260"><canvas id="statusChart"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const DATA = [{"car":"M010","seats":13,"trips":3,"r_0740":9,"r_1410":5,"r_1510":0,"r_1610":0,"r_1710":2,"r_1810":0,"u_0740":0.6923,"u_1410":0.3846,"u_1510":null,"u_1610":null,"u_1710":0.1538,"u_1810":null,"avg_util":0.4103,"total_riders":16,"pl":54.2,"cogs":3684.7,"revenue":5458.2,"distance":87.8},{"car":"M168","seats":12,"trips":3,"r_0740":4,"r_1410":4,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.3333,"u_1410":0.3333,"u_1510":null,"u_1610":0.1667,"u_1710":null,"u_1810":null,"avg_util":0.2778,"total_riders":10,"pl":-1255.3,"cogs":3640.9,"revenue":3179.2,"distance":80.1},{"car":"M169","seats":12,"trips":3,"r_0740":3,"r_1410":5,"r_1510":0,"r_1610":3,"r_1710":0,"r_1810":0,"u_0740":0.25,"u_1410":0.4167,"u_1510":null,"u_1610":0.25,"u_1710":null,"u_1810":null,"avg_util":0.3056,"total_riders":11,"pl":-1101.3,"cogs":3741.8,"revenue":3434.1,"distance":93.9},{"car":"M171","seats":12,"trips":2,"r_0740":5,"r_1410":2,"r_1510":0,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.4167,"u_1410":0.1667,"u_1510":null,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.2917,"total_riders":7,"pl":-1844.2,"cogs":3465.1,"revenue":2414.5,"distance":81.9},{"car":"M172","seats":12,"trips":3,"r_0740":6,"r_1410":3,"r_1510":0,"r_1610":1,"r_1710":0,"r_1810":0,"u_0740":0.5,"u_1410":0.25,"u_1510":null,"u_1610":0.0833,"u_1710":null,"u_1810":null,"avg_util":0.2778,"total_riders":10,"pl":-1500.4,"cogs":3886.0,"revenue":3179.2,"distance":123.3},{"car":"M173","seats":12,"trips":3,"r_0740":10,"r_1410":9,"r_1510":0,"r_1610":0,"r_1710":5,"r_1810":0,"u_0740":0.8333,"u_1410":0.75,"u_1510":null,"u_1610":null,"u_1710":0.4167,"u_1810":null,"avg_util":0.6667,"total_riders":24,"pl":1823.8,"cogs":4130.6,"revenue":7748.0,"distance":167.3},{"car":"M174","seats":12,"trips":3,"r_0740":3,"r_1410":0,"r_1510":2,"r_1610":0,"r_1710":0,"r_1810":1,"u_0740":0.25,"u_1410":null,"u_1510":0.1667,"u_1610":null,"u_1710":null,"u_1810":0.0833,"avg_util":0.1667,"total_riders":6,"pl":-2454.1,"cogs":3820.1,"revenue":1923.6,"distance":117.8},{"car":"M175","seats":12,"trips":2,"r_0740":11,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.9167,"u_1410":null,"u_1510":0.3333,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.625,"total_riders":15,"pl":13.3,"cogs":3646.9,"revenue":4694.1,"distance":117.1},{"car":"M176","seats":12,"trips":2,"r_0740":1.0,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":1.0,"u_1410":null,"u_1510":0.25,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.625,"total_riders":15,"pl":-120.7,"cogs":3780.9,"revenue":4694.1,"distance":139.9},{"car":"M177","seats":12,"trips":3,"r_0740":5,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":2,"r_1810":0,"u_0740":0.4167,"u_1410":null,"u_1510":0.25,"u_1610":null,"u_1710":0.1667,"u_1810":null,"avg_util":0.2778,"total_riders":10,"pl":-1285.5,"cogs":3671.1,"revenue":3179.2,"distance":82.0},{"car":"M503","seats":13,"trips":3,"r_0740":10,"r_1410":0,"r_1510":6,"r_1610":0,"r_1710":2,"r_1810":0,"u_0740":0.7692,"u_1410":null,"u_1510":0.4615,"u_1610":null,"u_1710":0.1538,"u_1810":null,"avg_util":0.4615,"total_riders":18,"pl":557.3,"cogs":3979.4,"revenue":5713.1,"distance":140.8},{"car":"M504","seats":14,"trips":1,"r_0740":0,"r_1410":0,"r_1510":0,"r_1610":3,"r_1710":0,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":null,"u_1610":0.2143,"u_1710":null,"u_1810":null,"avg_util":0.2143,"total_riders":3,"pl":-2476.0,"cogs":3190.6,"revenue":1394.8,"distance":53.6},{"car":"M527","seats":13,"trips":2,"r_0740":6,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.4615,"u_1410":null,"u_1510":0.2308,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.3462,"total_riders":9,"pl":-992.6,"cogs":3236.6,"revenue":2924.0,"distance":32.4},{"car":"M532","seats":10,"trips":3,"r_0740":5,"r_1410":2,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.5,"u_1410":0.2,"u_1510":null,"u_1610":0.2,"u_1710":null,"u_1810":null,"avg_util":0.3,"total_riders":9,"pl":-1019.3,"cogs":3263.3,"revenue":2924.0,"distance":9.0},{"car":"M534","seats":13,"trips":2,"r_0740":4,"r_1410":0,"r_1510":0,"r_1610":8,"r_1710":0,"r_1810":0,"u_0740":0.3077,"u_1410":null,"u_1510":null,"u_1610":0.6154,"u_1710":null,"u_1810":null,"avg_util":0.4615,"total_riders":12,"pl":-1306.9,"cogs":4315.7,"revenue":3688.9,"distance":227.0},{"car":"M535","seats":13,"trips":3,"r_0740":11,"r_1410":6,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.8462,"u_1410":0.4615,"u_1510":null,"u_1610":0.1538,"u_1710":null,"u_1810":null,"avg_util":0.4872,"total_riders":19,"pl":1074.5,"cogs":3717.0,"revenue":5968.0,"distance":86.3},{"car":"M550","seats":10,"trips":2,"r_0740":7,"r_1410":5,"r_1510":0,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.7,"u_1410":0.5,"u_1510":null,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.6,"total_riders":12,"pl":-444.9,"cogs":3453.6,"revenue":3688.9,"distance":69.6},{"car":"M557","seats":10,"trips":3,"r_0740":8,"r_1410":10,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.8,"u_1410":1.0,"u_1510":null,"u_1610":0.2,"u_1710":null,"u_1810":null,"avg_util":0.6667,"total_riders":20,"pl":1050.6,"cogs":3997.5,"revenue":6222.9,"distance":133.1},{"car":"M567","seats":14,"trips":2,"r_0740":12,"r_1410":0,"r_1510":5,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.8571,"u_1410":null,"u_1510":0.3571,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.6071,"total_riders":17,"pl":579.8,"cogs":3702.0,"revenue":5458.2,"distance":120.6},{"car":"M574","seats":13,"trips":3,"r_0740":7,"r_1410":6,"r_1510":0,"r_1610":0,"r_1710":4,"r_1810":0,"u_0740":0.5385,"u_1410":0.4615,"u_1510":null,"u_1610":null,"u_1710":0.3077,"u_1810":null,"avg_util":0.4359,"total_riders":17,"pl":697.5,"cogs":3584.3,"revenue":5458.2,"distance":60.9},{"car":"M575","seats":13,"trips":3,"r_0740":6,"r_1410":0,"r_1510":2,"r_1610":0,"r_1710":8,"r_1810":0,"u_0740":0.4615,"u_1410":null,"u_1510":0.1538,"u_1610":null,"u_1710":0.6154,"u_1810":null,"avg_util":0.4103,"total_riders":16,"pl":233.0,"cogs":3793.8,"revenue":5203.3,"distance":101.2},{"car":"M606","seats":14,"trips":1,"r_0740":0,"r_1410":0,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":null,"u_1610":0.1429,"u_1710":null,"u_1810":null,"avg_util":0.1429,"total_riders":2,"pl":-2961.4,"cogs":3421.1,"revenue":1139.9,"distance":87.9},{"car":"M619","seats":13,"trips":2,"r_0740":6,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.4615,"u_1410":null,"u_1510":0.2308,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.3462,"total_riders":9,"pl":-1371.5,"cogs":3615.6,"revenue":2924.0,"distance":112.0},{"car":"M788","seats":14,"trips":3,"r_0740":6,"r_1410":0,"r_1510":2,"r_1610":1,"r_1710":0,"r_1810":0,"u_0740":0.4286,"u_1410":null,"u_1510":0.1429,"u_1610":0.0714,"u_1710":null,"u_1810":null,"avg_util":0.2143,"total_riders":9,"pl":-1205.7,"cogs":3449.8,"revenue":2924.0,"distance":39.1},{"car":"M809","seats":14,"trips":4,"r_0740":9,"r_1410":4,"r_1510":0,"r_1610":4,"r_1710":0,"r_1810":3,"u_0740":0.6429,"u_1410":0.2857,"u_1510":null,"u_1610":0.2857,"u_1710":null,"u_1810":0.2143,"avg_util":0.3571,"total_riders":20,"pl":1228.7,"cogs":3818.5,"revenue":6222.9,"distance":68.0},{"car":"M810","seats":14,"trips":3,"r_0740":7,"r_1410":3,"r_1510":0,"r_1610":0,"r_1710":1,"r_1810":0,"u_0740":0.5,"u_1410":0.2143,"u_1510":null,"u_1610":null,"u_1710":0.0714,"u_1810":null,"avg_util":0.2619,"total_riders":11,"pl":-1067.7,"cogs":3821.6,"revenue":3434.1,"distance":101.9},{"car":"M812","seats":14,"trips":1,"r_0740":0,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":0.2857,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.2857,"total_riders":4,"pl":-2234.7,"cogs":3204.1,"revenue":1649.7,"distance":50.8},{"car":"M822","seats":14,"trips":1,"r_0740":9,"r_1410":0,"r_1510":0,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.6429,"u_1410":null,"u_1510":null,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.6429,"total_riders":9,"pl":-720.9,"cogs":2964.2,"revenue":2924.0,"distance":17.3},{"car":"M827","seats":14,"trips":3,"r_0740":9,"r_1410":8,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.6429,"u_1410":0.5714,"u_1510":null,"u_1610":0.1429,"u_1710":null,"u_1810":null,"avg_util":0.4524,"total_riders":19,"pl":1316.3,"cogs":3476.1,"revenue":5968.0,"distance":43.6},{"car":"M831","seats":14,"trips":3,"r_0740":11,"r_1410":11,"r_1510":0,"r_1610":3,"r_1710":0,"r_1810":0,"u_0740":0.7857,"u_1410":0.7857,"u_1510":null,"u_1610":0.2143,"u_1710":null,"u_1810":null,"avg_util":0.5952,"total_riders":25,"pl":2447.5,"cogs":3875.2,"revenue":7002.9,"distance":115.1},{"car":"M833","seats":14,"trips":2,"r_0740":11,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":0,"r_1810":0,"u_0740":0.7857,"u_1410":null,"u_1510":0.2143,"u_1610":null,"u_1710":null,"u_1810":null,"avg_util":0.5,"total_riders":14,"pl":172.4,"cogs":3346.2,"revenue":4693.6,"distance":52.0},{"car":"M838","seats":13,"trips":4,"r_0740":7,"r_1410":3,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":1,"u_0740":0.5385,"u_1410":0.2308,"u_1510":null,"u_1610":0.1538,"u_1710":null,"u_1810":0.0769,"avg_util":0.25,"total_riders":13,"pl":-743.7,"cogs":4007.4,"revenue":3943.8,"distance":100.5},{"car":"M842","seats":14,"trips":3,"r_0740":5,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":0,"r_1810":3,"u_0740":0.3571,"u_1410":null,"u_1510":0.2857,"u_1610":null,"u_1710":null,"u_1810":0.2143,"avg_util":0.2857,"total_riders":12,"pl":-1229.8,"cogs":4238.6,"revenue":3688.9,"distance":174.3},{"car":"M844","seats":14,"trips":3,"r_0740":9,"r_1410":7,"r_1510":0,"r_1610":0,"r_1710":3,"r_1810":0,"u_0740":0.6429,"u_1410":0.5,"u_1510":null,"u_1610":null,"u_1710":0.2143,"u_1810":null,"avg_util":0.4524,"total_riders":19,"pl":934.3,"cogs":3858.9,"revenue":5968.0,"distance":112.2},{"car":"M845","seats":14,"trips":3,"r_0740":4,"r_1410":4,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.2857,"u_1410":0.2857,"u_1510":null,"u_1610":0.1429,"u_1710":null,"u_1810":null,"avg_util":0.2381,"total_riders":10,"pl":-1320.2,"cogs":3819.2,"revenue":3179.2,"distance":101.1},{"car":"M846","seats":14,"trips":3,"r_0740":11,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":2,"r_1810":0,"u_0740":0.7857,"u_1410":null,"u_1510":0.2857,"u_1610":null,"u_1710":0.1429,"u_1810":null,"avg_util":0.4048,"total_riders":17,"pl":729.8,"cogs":3553.6,"revenue":5458.2,"distance":51.3},{"car":"M847","seats":14,"trips":3,"r_0740":9,"r_1410":4,"r_1510":0,"r_1610":5,"r_1710":0,"r_1810":0,"u_0740":0.6429,"u_1410":0.2857,"u_1510":null,"u_1610":0.3571,"u_1710":null,"u_1810":null,"avg_util":0.4286,"total_riders":18,"pl":800.1,"cogs":3738.2,"revenue":5713.1,"distance":74.3},{"car":"M848","seats":14,"trips":3,"r_0740":9,"r_1410":4,"r_1510":0,"r_1610":0,"r_1710":0,"r_1810":1,"u_0740":0.6429,"u_1410":0.2857,"u_1510":null,"u_1610":null,"u_1710":null,"u_1810":0.0714,"avg_util":0.3333,"total_riders":14,"pl":-50.9,"cogs":3569.5,"revenue":4693.6,"distance":59.2},{"car":"M849","seats":14,"trips":3,"r_0740":9,"r_1410":6,"r_1510":0,"r_1610":0,"r_1710":2,"r_1810":0,"u_0740":0.6429,"u_1410":0.4286,"u_1510":null,"u_1610":null,"u_1710":0.1429,"u_1810":null,"avg_util":0.4048,"total_riders":17,"pl":765.4,"cogs":3518.0,"revenue":5458.2,"distance":45.2},{"car":"M851","seats":13,"trips":3,"r_0740":10,"r_1410":3,"r_1510":0,"r_1610":0,"r_1710":0,"r_1810":1,"u_0740":0.7692,"u_1410":0.2308,"u_1510":null,"u_1610":null,"u_1710":null,"u_1810":0.0769,"avg_util":0.359,"total_riders":14,"pl":-77.9,"cogs":3596.5,"revenue":4693.6,"distance":64.8},{"car":"M857","seats":14,"trips":3,"r_0740":8,"r_1410":12,"r_1510":0,"r_1610":2,"r_1710":0,"r_1810":0,"u_0740":0.5714,"u_1410":0.8571,"u_1510":null,"u_1610":0.1429,"u_1710":null,"u_1810":null,"avg_util":0.5238,"total_riders":22,"pl":1775.8,"cogs":3782.1,"revenue":6986.3,"distance":94.2},{"car":"M858","seats":14,"trips":3,"r_0740":7,"r_1410":0,"r_1510":8,"r_1610":0,"r_1710":5,"r_1810":0,"u_0740":0.5,"u_1410":null,"u_1510":0.5714,"u_1610":null,"u_1710":0.3571,"u_1810":null,"avg_util":0.4762,"total_riders":20,"pl":1137.2,"cogs":3910.9,"revenue":6222.9,"distance":114.5},{"car":"M866","seats":13,"trips":1,"r_0740":0,"r_1410":0,"r_1510":0,"r_1610":4,"r_1710":0,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":null,"u_1610":0.3077,"u_1710":null,"u_1810":null,"avg_util":0.3077,"total_riders":4,"pl":-2170.5,"cogs":3139.9,"revenue":1649.7,"distance":48.5},{"car":"M869","seats":14,"trips":3,"r_0740":6,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":1,"r_1810":0,"u_0740":0.4286,"u_1410":null,"u_1510":0.2857,"u_1610":null,"u_1710":0.0714,"u_1810":null,"avg_util":0.2619,"total_riders":11,"pl":-698.5,"cogs":3452.4,"revenue":3434.1,"distance":38.9},{"car":"M886","seats":13,"trips":3,"r_0740":7,"r_1410":4,"r_1510":0,"r_1610":1,"r_1710":0,"r_1810":0,"u_0740":0.5385,"u_1410":0.3077,"u_1510":null,"u_1610":0.0769,"u_1710":null,"u_1810":null,"avg_util":0.3077,"total_riders":12,"pl":-830.0,"cogs":3838.7,"revenue":3688.9,"distance":105.8},{"car":"M946","seats":13,"trips":3,"r_0740":9,"r_1410":0,"r_1510":3,"r_1610":0,"r_1710":1,"r_1810":0,"u_0740":0.6923,"u_1410":null,"u_1510":0.2308,"u_1610":null,"u_1710":0.0769,"u_1810":null,"avg_util":0.3333,"total_riders":13,"pl":-435.7,"cogs":3699.4,"revenue":3943.8,"distance":91.8},{"car":"M952","seats":10,"trips":4,"r_0740":6,"r_1410":3,"r_1510":0,"r_1610":5,"r_1710":0,"r_1810":2,"u_0740":0.6,"u_1410":0.3,"u_1510":null,"u_1610":0.5,"u_1710":null,"u_1810":0.2,"avg_util":0.4,"total_riders":16,"pl":-270.6,"cogs":4299.0,"revenue":5203.3,"distance":159.5},{"car":"M958","seats":13,"trips":3,"r_0740":8,"r_1410":0,"r_1510":4,"r_1610":0,"r_1710":0,"r_1810":2,"u_0740":0.6154,"u_1410":null,"u_1510":0.3077,"u_1610":null,"u_1710":null,"u_1810":0.1538,"avg_util":0.359,"total_riders":14,"pl":-345.7,"cogs":3864.3,"revenue":4693.6,"distance":114.8},{"car":"M964","seats":14,"trips":3,"r_0740":11,"r_1410":0,"r_1510":2,"r_1610":0,"r_1710":1,"r_1810":0,"u_0740":0.7857,"u_1410":null,"u_1510":0.1429,"u_1610":null,"u_1710":0.0714,"u_1810":null,"avg_util":0.3333,"total_riders":14,"pl":-359.5,"cogs":3878.1,"revenue":4693.6,"distance":109.9},{"car":"M967","seats":14,"trips":3,"r_0740":5,"r_1410":2,"r_1510":0,"r_1610":3,"r_1710":0,"r_1810":0,"u_0740":0.3571,"u_1410":0.1429,"u_1510":null,"u_1610":0.2143,"u_1710":null,"u_1810":null,"avg_util":0.2381,"total_riders":10,"pl":-969.7,"cogs":3468.6,"revenue":3179.2,"distance":47.9},{"car":"M981","seats":14,"trips":1,"r_0740":0,"r_1410":0,"r_1510":0,"r_1610":0,"r_1710":4,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":null,"u_1610":null,"u_1710":0.2857,"u_1810":null,"avg_util":0.2857,"total_riders":4,"pl":-2341.4,"cogs":3310.9,"revenue":1649.7,"distance":78.7},{"car":"M983","seats":14,"trips":1,"r_0740":0,"r_1410":0,"r_1510":0,"r_1610":0,"r_1710":5,"r_1810":0,"u_0740":null,"u_1410":null,"u_1510":null,"u_1610":null,"u_1710":0.3571,"u_1810":null,"avg_util":0.3571,"total_riders":5,"pl":-2316.2,"cogs":3540.6,"revenue":1904.6,"distance":116.7},{"car":"M996","seats":10,"trips":3,"r_0740":4,"r_1410":3,"r_1510":0,"r_1610":1,"r_1710":0,"r_1810":0,"u_0740":0.4,"u_1410":0.3,"u_1510":null,"u_1610":0.1,"u_1710":null,"u_1810":null,"avg_util":0.2667,"total_riders":8,"pl":-1637.2,"cogs":3626.3,"revenue":2669.4,"distance":67.4}];
+
+const SLOT_KEYS = ['u_0740','u_1410','u_1510','u_1610','u_1710','u_1810'];
+const SLOT_LABELS = ['07:40','14:10','15:10','16:10','17:10','18:10'];
+const SLOT_COLORS = ['#2471a3','#8e44ad','#16a085','#e67e22','#e74c3c','#96281b'];
+
+// 1. Slot avg bar
+new Chart(document.getElementById('slotAvgChart'),{
+  type:'bar',
+  data:{
+    labels:SLOT_LABELS,
+    datasets:[{
+      data:[58.6,40.5,27.3,21.5,22.5,13.6],
+      backgroundColor:SLOT_COLORS.map(c=>c+'cc'),
+      borderColor:SLOT_COLORS, borderWidth:2, borderRadius:6,
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},
+      tooltip:{callbacks:{afterLabel:ctx=>{
+        const info=[{b:47,r:356},{b:27,r:138},{b:19,r:69},{b:22,r:60},{b:16,r:48},{b:8,r:14}][ctx.dataIndex];
+        return `${info.b} active buses · ${info.r} riders`;
+      }}}
+    },
+    scales:{y:{max:80,ticks:{callback:v=>v+'%',font:{size:11}},grid:{color:'#f5eeee'}},x:{ticks:{font:{size:12,weight:'bold'}}}}
+  }
+});
+
+// 2. Util vs PL scatter
+new Chart(document.getElementById('utilPLChart'),{
+  type:'scatter',
+  data:{datasets:[{
+    data:DATA.map(d=>({x:Math.round(d.avg_util*100),y:Math.round(d.pl)})),
+    backgroundColor:DATA.map(d=>d.pl>0?'#27ae6099':'#c0392b88'),
+    borderColor:DATA.map(d=>d.pl>0?'#1e8449':'#922b21'),
+    pointRadius:5, pointHoverRadius:8
+  }]},
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>{const d=DATA[ctx.dataIndex];return `${d.car}: ${ctx.raw.x}% avg · ฿${d.pl.toLocaleString()}`;}}}},
+    scales:{x:{title:{display:true,text:'Avg Utilization (%)'},min:0,max:80},y:{title:{display:true,text:'P&L (฿)'},ticks:{callback:v=>'฿'+(v/1000).toFixed(0)+'K'}}}
+  }
+});
+
+// 3. Per-bus per-slot grouped bar
+const sorted=[...DATA].sort((a,b)=>b.avg_util-a.avg_util);
+new Chart(document.getElementById('perBusChart'),{
+  type:'bar',
+  data:{
+    labels:sorted.map(d=>d.car),
+    datasets:SLOT_KEYS.map((sk,i)=>({
+      label:SLOT_LABELS[i],
+      data:sorted.map(d=>d[sk]!=null?Math.round(d[sk]*100):null),
+      backgroundColor:SLOT_COLORS[i]+'bb',
+      borderColor:SLOT_COLORS[i],
+      borderWidth:1, borderRadius:2, spanGaps:false,
+    }))
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{size:10},boxWidth:12}}},
+    scales:{x:{ticks:{font:{size:8},maxRotation:55}},y:{max:110,ticks:{callback:v=>v+'%',font:{size:10}},grid:{color:'#f5eeee'}}}
+  }
+});
+
+// 4. PL distribution
+new Chart(document.getElementById('plDistChart'),{
+  type:'bar',
+  data:{
+    labels:['< –2K','–2K to –1K','–1K to –500','–500 to 0','0 to +500','> +500'],
+    datasets:[{data:[7,13,5,9,5,14],
+      backgroundColor:['#c0392bbb','#e74c3cbb','#f1948abb','#fadbd8bb','#a9dfbf','#27ae60bb'],
+      borderWidth:1,borderRadius:4
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{title:{display:true,text:'Buses',font:{size:10}}},x:{ticks:{font:{size:10}}}}}
+});
+
+// 5. Slot trend
+new Chart(document.getElementById('slotTrendChart'),{
+  type:'line',
+  data:{
+    labels:SLOT_LABELS,
+    datasets:[
+      {label:'Avg Util (%)',data:[58.6,40.5,27.3,21.5,22.5,13.6],yAxisID:'y',borderColor:'#c0392b',backgroundColor:'#c0392b22',borderWidth:2.5,pointRadius:5,fill:true,tension:0.3},
+      {label:'Total Riders',data:[356,138,69,60,48,14],yAxisID:'y2',borderColor:'#2471a3',backgroundColor:'transparent',borderWidth:2,pointRadius:5,borderDash:[5,3],fill:false,tension:0.3}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top',labels:{font:{size:10}}}},
+    scales:{
+      y:{position:'left',title:{display:true,text:'Avg Util (%)'},max:80,ticks:{callback:v=>v+'%',font:{size:10}}},
+      y2:{position:'right',title:{display:true,text:'Riders'},grid:{drawOnChartArea:false},ticks:{font:{size:10}}},
+      x:{ticks:{font:{size:10}}}
+    }
+  }
+});
+
+// 6. Status donut
+new Chart(document.getElementById('statusChart'),{
+  type:'doughnut',
+  data:{
+    labels:['Profitable (19)','Near breakeven (10)','Loss > –฿1K (14)','PM-only / eliminate (10)'],
+    datasets:[{data:[19,10,14,10],
+      backgroundColor:['#27ae60bb','#f39c12bb','#e74c3cbb','#c0392bbb'],
+      borderColor:['#1e8449','#d68910','#c0392b','#922b21'],borderWidth:2
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}
+});
+
+// Full table
+function fmtU(v){
+  if(v==null)return '<td style="color:#ddd;text-align:center;font-size:11px">—</td>';
+  const p=Math.round(v*100);
+  const bg=v>=0.6?'#eafaf1':v>=0.4?'#eaf4fb':v>=0.25?'#fef9e7':'#fdedec';
+  const co=v>=0.6?'#1e8449':v>=0.4?'#1a5276':v>=0.25?'#7d6608':'#922b21';
+  return `<td style="background:${bg};color:${co};font-weight:700;font-family:'DM Mono',monospace;font-size:11px;text-align:center">${p}%</td>`;
+}
+const tbl=document.getElementById('fullTable');
+const ds=[...DATA].sort((a,b)=>b.pl-a.pl);
+let h=`<table><tr><th>Bus</th><th>Seats</th><th>Trips</th><th>07:40</th><th>14:10</th><th>15:10</th><th>16:10</th><th>17:10</th><th>18:10</th><th>Avg Util</th><th>Riders</th><th>km</th><th>COGS</th><th>P&L</th></tr>`;
+ds.forEach(d=>{
+  const ap=Math.round(d.avg_util*100);
+  const ab=d.avg_util>=0.5?'#eafaf1':d.avg_util>=0.35?'#eaf4fb':'#fef9e7';
+  const ac=d.avg_util>=0.5?'#1e8449':d.avg_util>=0.35?'#1a5276':'#7d6608';
+  const pb=d.pl>0?'#eafaf1':'#fdedec'; const pc=d.pl>0?'#1e8449':'#922b21';
+  h+=`<tr><td><b>${d.car}</b></td><td style="text-align:center">${d.seats}</td><td style="text-align:center">${d.trips}</td>${fmtU(d.u_0740)}${fmtU(d.u_1410)}${fmtU(d.u_1510)}${fmtU(d.u_1610)}${fmtU(d.u_1710)}${fmtU(d.u_1810)}<td style="background:${ab};color:${ac};font-weight:800;font-family:'DM Mono',monospace;text-align:center">${ap}%</td><td style="text-align:center">${d.total_riders}</td><td style="text-align:center">${d.distance}</td><td style="text-align:right;font-family:'DM Mono',monospace">฿${Math.round(d.cogs).toLocaleString()}</td><td style="background:${pb};color:${pc};font-weight:700;font-family:'DM Mono',monospace;text-align:right">${d.pl>=0?'+':''}฿${Math.round(d.pl).toLocaleString()}</td></tr>`;
+});
+h+='</table>';
+tbl.innerHTML=h;
+
+function showTab(id,el){
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  el.classList.add('active');
+}
+</script>
+</body>
+</html>
